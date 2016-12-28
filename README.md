@@ -18,7 +18,7 @@ Here is what Gravl looks like:
 		]
 	]
 
-##Why?
+###Why?
 Languages like XML and JSON are immensely useful, but they aren't without their limitations. Gravl aims to solve a few of the biggest problems with these two languages in particular, while keeping its syntax as simple to learn and use as possible.
 
 ##The Basics
@@ -67,7 +67,7 @@ A node in Gravl represents an object and is always started with a `[` and ended 
 
 Its structure looks like this:
 
-	`[` `name` `attributes` `child nodes` `]`
+`[` `name` `attributes` `child nodes` `]`
 
 Only the name is required, and must be the first thing inside the node, however you can use as much whitespace as you like between the parts of a node.
 
@@ -88,7 +88,7 @@ Note: Be careful to avoid accidentally using commas! The comma is *not* a reserv
 
 	[MyNode name=Bob, age=24]
 
-Attributes can also recursively represent other nodes. Node-valued attributes are represented exactly the same as standalone nodes: no escaping, wrapping in quotes, or other quirks are needed:
+Attributes can also recursively represent other nodes. Node-valued attributes are represented exactly the same as stand-alone nodes: no escaping, wrapping in quotes, or other quirks are needed:
 
 	[MyNode attr1="value" attr2=[AnotherNode]]
 
@@ -99,7 +99,7 @@ Remember, any symbol can be represented as a string in Gravl, even node and attr
 However it is recommended you avoid using strings for anything other than values, but Gravl is designed to be very general-purpose and therefore leaves that up to each particular implementation.
 
 ###Escaping
-There are only two escaped characters in Gravl: backslash (\) and double-quote ("). Beyond this, strings are expected to contain the literal character you wish to encode.
+There are only two escaped characters in Gravl: backslash (`\`) and double-quote (`"`). Beyond this, strings are expected to contain the literal character you wish to encode.
 
 Like most languages, characters are escaped with the backslash in Gravl:
 
@@ -141,7 +141,7 @@ Doesn't that look nice and clean? Not bad considering we got it all for free.
 Comments in Gravl are indicated with the `#` character. Any text following (and including) a `#` up until the end of the line will be skipped over by the parser. You can put comments anywhere, but they always go to the end of the line. There are no inline comments in Gravl.
 
 	# opening comment
-	[Node					# this is a comment
+	[Node				# this is a comment
 		attr=value		# this is another comment
 	]
 	# closing comment
@@ -155,4 +155,4 @@ I also welcome any feedback and suggestions concerning Gravl, and hope that othe
 
 Happy coding!
 
-// devios1
+	// devios1
