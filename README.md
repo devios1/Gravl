@@ -19,16 +19,16 @@ Here is what Gravl looks like:
 	]
 
 ###Why?
-Languages like XML and JSON are immensely useful, but they aren't without their limitations. Gravl aims to solve a few of the biggest problems with these two languages in particular, while keeping its syntax as simple to learn and use as possible.
+Languages like XML and JSON are immensely useful, but they aren't without their problems. Gravl aims to solve a few of the biggest problems with these two languages in particular, while keeping its syntax as clean and simple as possible.
 
 ##The Basics
-Gravl uses a square bracket syntax to represent nodes. Like XML (and unlike JSON), nodes in Gravl are *named* and can recursively contain child nodes. Like JSON (and unlike XML), attributes in Gravl are also fully recursive and can be assigned node values themselves. (Unlike JSON, however, Gravl has no explicit support for arrays, but this is mainly because as you'll see, it doesn't need it.)
+Gravl uses a square bracket syntax to represent nodes. Like XML (and unlike JSON), nodes in Gravl are named and can recursively contain child nodes. Like JSON (and unlike XML), attributes in Gravl are also fully recursive and can be assigned node values themselves. (Unlike JSON, however, Gravl has no explicit syntax for arrays, but this is mainly because as you'll see, it doesn't need it.)
 
 Gravl uses only 5 reserved characters: `[`, `]`, `"`, `=`, and `#`. Everything else is Unicode, and considered a valid symbol character.
 
-Gravl also supports a few things that neither XML nor JSON do. For one, unlike XML and JSON, Gravl doesn't require that a document have precisely one root node. It does this by wrapping all documents in their own implicit document node, which typically takes the name of the file or path the document was loaded from, or "Document" by default.
+Gravl also supports a few things that neither XML nor JSON do. For one, unlike XML and JSON, Gravl doesn't require that a document always have exactly one root node. It does this by wrapping all documents in their own implicit document node, which typically takes the name of the file or path the document was loaded from, or "Document" by default.
 
-This can be handy as a means to define very simple-structured config files or to attach attributes to a file as a whole.
+This can be handy as a means to define very simple-structured config files, or to attach attributes to a file as a whole.
 
 Here's what an example config file might look like in Gravl:
 
@@ -42,7 +42,7 @@ Here's what an example config file might look like in Gravl:
 		"file2.txt"
 	]
 
-Like XML, Gravl supports **text nodes**, however there are a couple key differences to how text nodes are handled in XML. Specifically, while XML will automatically treat any text found outside of an attribute as a text node, in Gravl any piece of text that includes whitespace (or reserved characters) must be wrapped in double quotes:
+Like XML, Gravl supports **text nodes**, however there are a couple key differences to how text nodes are handled compared to XML. Specifically, while XML will automatically treat any text found outside of an attribute as a text node, in Gravl any piece of text that includes whitespace (or reserved characters) must be wrapped in quotes to be considered a single node:
 
 	"I am a text node."
 
@@ -57,6 +57,13 @@ While not wrapping the above text in quotes is technically still valid (as the s
 …which is probably *not* what was intended.
 
 Gravl is an extremely permissive language in terms of allowed characters. This was one of the major limitations of XML that initially inspired the creation of Gravl. Unlike XML, Gravl allows you to use *any* character in a symbol that is not a reserved character or whitespace, and if that's not enough for you, you can wrap *any* text (including node names, attribute names, and values) in quotes to include any characters at all, including whitespace and reserved characters.
+
+###Escaping
+There are only two escaped characters in Gravl: backslash (`\`) and double-quote (`"`). Beyond this, strings are expected to contain the literal character you wish to encode.
+
+Like most languages, characters are escaped with the backslash in Gravl:
+
+	[Node attr="Use a \\ to \"escape\" characters in a string."]
 
 ##The Structure of a Node
 A node in Gravl represents an object and is always started with a `[` and ended with a `]`. It consists of three parts:
@@ -98,13 +105,6 @@ Remember, any symbol can be represented as a string in Gravl, even node and attr
 
 However it is recommended you avoid using strings for anything other than values, but Gravl is designed to be very general-purpose and therefore leaves that up to each particular implementation.
 
-###Escaping
-There are only two escaped characters in Gravl: backslash (`\`) and double-quote (`"`). Beyond this, strings are expected to contain the literal character you wish to encode.
-
-Like most languages, characters are escaped with the backslash in Gravl:
-
-	[Node attr="Use a \\ to \"escape\" characters in a string."]
-
 ###Child Nodes
 A node in Gravl is fully recursive and can contain an ordered set of other child nodes. Everything after the final attribute of a node (if any) are considered the child nodes of that node.
 
@@ -115,7 +115,7 @@ A node in Gravl is fully recursive and can contain an ordered set of other child
 	]
 
 ###Arrays
-You may be surprised to learn that like unlike JSON, Gravl doesn't explicitly have a native syntax for arrays. The reason for this is that the Gravl syntax already implicitly supports arrays in the form of child nodes. For example, if we adopt the convention of using the name "@" to represent an array, we can wrap any ordered set of nodes in an array node like so:
+You may be surprised to learn that like unlike JSON, Gravl doesn't have an explicit syntax for arrays. The reason for this is that Gravl already implicitly supports arrays in the form of child nodes. For example, if we adopt the convention of using the name "@" to represent an array, we can wrap any ordered set of nodes in an array node like so:
 
 	[Node
 		items=[@				# this is actually just a node named @
@@ -125,11 +125,11 @@ You may be surprised to learn that like unlike JSON, Gravl doesn't explicitly ha
 		]
 	]
 
-We can pretend that this is the "official" syntax for arrays, but the truth is it doesn't rely on any new concepts and so is not technically part of the language spec. It's therefore up to each implementation to decide if or how arrays are to be represented, but you can consider this one suggested way.
+We can pretend that this is the "official" syntax for arrays, but the truth is it doesn't rely on any new concepts and so is not technically part of the language spec. It's therefore up to each implementation to decide if or how arrays should be represented, but you can consider this one suggestion.
 
-While it may seem a bit weird at first, there is actually a lot of beauty in this approach. For one thing, it reuses all existing concepts, and is just as expressive as had there been an explicit syntax for arrays: arrays can be hierarchical, and they can contain any combination of other nodes and string values (because ultimately everything—even strings—are nodes in Gravl). As a bonus, because arrays are really just nodes, they can even have their own attributes! While you may argue the usefulness of this, it does demonstrate the power of reusing concepts and keeping the model simple.
+While it may seem a bit weird at first, there is actually a lot of beauty in this approach. For one thing, it reuses all existing concepts, and is just as expressive as had there been an explicit syntax for arrays: arrays can be hierarchical, and they can contain any combination of other nodes and string values (because ultimately everything—even strings—are nodes in Gravl). As a bonus, because arrays are really just nodes, they can even have attributes of their own! While you may argue the usefulness of this, it does demonstrate the power of reusing concepts and keeping the model simple.
 
-It also means we can take full advantage of all the syntactic shorthands in Gravl when working with arrays, that being that symbols (chains of glyphs that do not include whitespace or reserved characters) do not need to be wrapped in quotes. So if the elements in our array don't need such characters, such as numbers, we can very elegantly and concisely represent them in Gravl:
+This also means we can take full advantage of all the syntactic shorthands in Gravl when working with arrays; that being that symbols (chains of glyphs that do not include whitespace or reserved characters) do not need to be wrapped in quotes. So if the elements in our array don't need such characters, such as numbers, we can very elegantly and concisely represent them in Gravl:
 
 	[Publication
 		years=[@ 1998 2001 2009 2016]
@@ -147,12 +147,12 @@ Comments in Gravl are indicated with the `#` character. Any text following (and 
 	# closing comment
 
 ##Other Languages
-The first Gravl parser is written in Swift, but as Gravl was designed to be a very general-purpose syntax, I also plan to add implementations in other languages, starting with JavaScript and C#.
+Gravl is now implemented in both Swift and JavaScript, but as it was designed to be a very general-purpose syntax, I also plan to add implementations in other languages such as Python and C#.
 
-If you'd like to contribute by implementing a Gravl parser in your own favourite language, I'd be happy to include it in the project as well. Gravl is really quite a simple syntax, and writing a parser for it can actually be a lot of fun and a great exercise!
+If you'd like to contribute by implementing a Gravl parser in your own favourite language, I'd be happy to include it in the project as well. Gravl is really quite a simple syntax, and writing a parser for it can actually be a fun exercise.
 
-I also welcome any feedback and suggestions concerning Gravl, and hope that others out there might find it useful too!
+I also welcome any feedback and suggestions concerning Gravl, and hope that others out there might find it useful!
 
 Happy coding!
 
-	// devios1
+`// devios1`

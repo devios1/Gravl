@@ -138,7 +138,7 @@ public class Gravl {
 			return document
 		}
 		
-		// MARK: Record States
+		// MARK: Recording States
 		
 		private func recordNode() throws -> Node {
 			var char = try readGlyph()
@@ -153,9 +153,10 @@ public class Gravl {
 			let node = try recordNodeBody(name: name)
 			
 			char = try readGlyph()
-			if char != "]" { // is this actually possible?
-				throw ParserError(self, fault: .unexpectedChar(char: char, reason: "Attributes must be defined before child nodes."))
-			}
+			assert(char == "]")
+//			if char != "]" { // is this actually possible?
+//				throw ParserError(self, fault: .unexpectedChar(char: char, reason: "Attributes must be defined before child nodes."))
+//			}
 			
 			return node
 		}
@@ -166,45 +167,44 @@ public class Gravl {
 			
 			// look for any attributes
 			while true {
-				let firstSymbol = try recordSymbol()
+				let symbol = try recordSymbol()
 				
-				if firstSymbol == "" {
+				if symbol == "" {
 					break // no more attributes
 				}
 				
 				if peekGlyph() == "=" { // this is an attribute
 					_ = try readGlyph() // absorb the =
 					
-					if attributes[firstSymbol] != nil {
-						throw ParserError(self, fault: .duplicateAttribute(attribute: firstSymbol, node: name))
+					if attributes[symbol] != nil {
+						throw ParserError(self, fault: .duplicateAttribute(attribute: symbol, node: name))
 					}
 					
 					if peekGlyph() == "[" {
 						let value = try recordNode()
-						
-						attributes[firstSymbol] = value
+						attributes[symbol] = value
 					} else {
-						let secondSymbol = try recordSymbol()
+						let value = try recordSymbol()
 						
-						if secondSymbol == "" {
+						if value == "" {
 							throw ParserError(self, fault: .unexpectedChar(char: try readChar(), reason: "Attributes must have values."))
 						}
 						
-						attributes[firstSymbol] = TextNode(value: secondSymbol)
+						attributes[symbol] = TextNode(value: value)
 					}
 				} else {
-					childNodes.append(TextNode(value: firstSymbol)) // add the symbol as a TextNode and break
+					childNodes.append(TextNode(value: symbol)) // add the symbol as a TextNode and break
 					break // as soon as we record a child node we are no longer in attribute record mode
 				}
 			}
 			
 			// add remaining nodes as children
 			while peekGlyph() != nil && peekGlyph() != "]" { // we also need to consider eof now
-				var node: Node
-				
 				if peekGlyph() == "=" {
 					throw ParserError(self, fault: .unexpectedChar(char: try readGlyph(), reason: "Attributes must be defined before child nodes."))
 				}
+				
+				var node: Node
 				
 				if peekGlyph() == "[" {
 					node = try recordNode()
@@ -247,6 +247,7 @@ public class Gravl {
 			assert(char == "\"")
 			
 			var string = ""
+			
 			while peekChar() != nil && peekChar() != "\"" {
 				if peekChar() == "\\" {
 					string.append(try recordEscapedChar())
@@ -321,7 +322,6 @@ public class Gravl {
 					glyphIndex = nil
 					// no glyph found before the eof
 					return nil
-//					throw ParserError(self, fault: .unexpectedEOF)
 				}
 				
 				// handle # comments
