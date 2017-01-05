@@ -201,7 +201,11 @@ public class Gravl {
 			// add remaining nodes as children
 			while peekGlyph() != nil && peekGlyph() != "]" { // we also need to consider eof now
 				if peekGlyph() == "=" {
-					throw ParserError(self, fault: .unexpectedChar(char: try readGlyph(), reason: "Attributes must be defined before child nodes."))
+					if childNodes.count == 0 {
+						throw ParserError(self, fault: .unexpectedChar(char: try readGlyph(), reason: "Nodes must be named."))
+					} else {
+						throw ParserError(self, fault: .unexpectedChar(char: try readGlyph(), reason: "Attributes must be defined before child nodes."))
+					}
 				}
 				
 				var node: Node
@@ -256,7 +260,7 @@ public class Gravl {
 				}
 			}
 			
-			char = try readGlyph()
+			char = try readChar()
 			assert(char == "\"")
 			
 			return string

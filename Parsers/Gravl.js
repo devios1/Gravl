@@ -50,8 +50,12 @@ Gravl.Parser = function(name = "Document") {
 				throw new ParserError("Extraneous character: " + char);
 		} catch (e) {
 			this.error = e;
+
 			if (e instanceof ParserError)
 				console.error("Gravl parse error: " + e.message + " (line " + line + ", col " + col + ")");
+			else
+				throw e;
+
 			return null;
 		}
 
@@ -90,7 +94,7 @@ Gravl.Parser = function(name = "Document") {
 				readGlyph() // absorb the =
 
 				if (attributes[symbol] !== undefined)
-					throw new ParserError("Duplicate attribute \"" + symbol + "\".");
+					throw new ParserError("Duplicate attribute: \"" + symbol + "\"");
 
 				if (peekGlyph() == "[") {
 					var value = recordNode();
@@ -103,16 +107,20 @@ Gravl.Parser = function(name = "Document") {
 
 					attributes[symbol] = new Gravl.TextNode(value);
 				}
-			} else {
+			} else { // glyph is not =
 				childNodes.push(new Gravl.TextNode(symbol));
-				break;
+				break; // no more attributes
 			}
 		}
 
 		// add remaining nodes as children
 		while (peekGlyph() != null && peekGlyph() != "]") {
-			if (peekGlyph() == "=")
-				throw new ParserError("Attributes must be defined before child nodes.");
+			if (peekGlyph() == "=") {
+				if (childNodes.length == 0)
+					throw new ParserError("Nodes must be named.");
+				else
+					throw new ParserError("Attributes must be defined before child nodes.");
+			}
 
 			var node;
 
@@ -158,14 +166,14 @@ Gravl.Parser = function(name = "Document") {
 				string += readChar();
 		}
 
-		char = readGlyph();
+		char = readChar();
 		console.assert(char == "\"");
 
 		return string;
 	}
 
 	function recordEscapedChar() {
-		var char = readChar(); // absorb \
+		var char = readChar(); // absorb the \
 		console.assert(char == "\\");
 
 		char = readChar();
