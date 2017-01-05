@@ -74,7 +74,7 @@ A node in Gravl is started with a `[` and ended with a `]`. It consists of three
 
 Its structure looks like this:
 
-`[` *name* *attributes* *child_nodes* `]`
+`[` *name*&nbsp;&nbsp;*attributes*&nbsp;&nbsp;*child_nodes* `]`
 
 Only the name is required, and must be the first thing inside the node, however you can use whatever whitespace you like between the parts of a node, as well as on either side of the `=` sign for attributes.
 
@@ -92,7 +92,7 @@ In the above example, the first two nodes are `TextNode`s while the last two are
 ###Attributes
 Attributes have the following structure:
 
-	*attribute_name* `=` *attribute_value*
+*attribute_name* `=` *attribute_value*
 
 The name of an attribute must be a symbol or a string, while the value of an attribute can be a symbol, string, or another node. Attributes must always be defined before child nodes. The attribute names of a node must also be unique for a given node. It is considered a parse error if an attribute is defined more than once for the same node.
 
