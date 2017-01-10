@@ -74,7 +74,7 @@ A node in Gravl is started with a `[` and ended with a `]`. It consists of three
 
 Its structure looks like this:
 
-`[` *name*&nbsp;&nbsp;*attributes*&nbsp;&nbsp;*child_nodes* `]`
+`[` ***name***&nbsp;&nbsp;***attributes***&nbsp;&nbsp;***child_nodes*** `]`
 
 Only the name is required, and must be the first thing inside the node, however you can use whatever whitespace you like between the parts of a node, as well as on either side of the `=` sign for attributes.
 
@@ -92,7 +92,7 @@ In the above example, the first two nodes are `TextNode`s while the last two are
 ###Attributes
 Attributes have the following structure:
 
-*attribute_name* `=` *attribute_value*
+***attribute_name*** `=` ***attribute_value***
 
 The name of an attribute must be a symbol or a string, while the value of an attribute can be a symbol, string, or another node. Attributes must always be defined before child nodes. The attribute names of a node must also be unique for a given node. It is considered a parse error if an attribute is defined more than once for the same node.
 
@@ -114,7 +114,7 @@ This is typically only an issue when using unquoted values, however, because the
 
 	[MyNode name="Bob", age="48"]
 
-Attributes can also have other nodes as their values. Node valued attributes are represented exactly the same as stand-alone nodes: no escaping, wrapping in quotes, or other tricks are needed:
+Attributes can also have other nodes as their values. Node-valued attributes are represented exactly the same as stand-alone nodes: no escaping, wrapping in quotes, or other tricks are needed:
 
 	[MyNode string="value"
 		node=[AnotherNode something=true
@@ -171,10 +171,10 @@ Comments in Gravl are indicated with the `#` character. Any text following (and 
 	
 	# closing comment
 
-##Other Languages
-Gravl is now implemented in Swift, JavaScript and Python, but I hope to keep adding to this list. Gravl was designed to be a very general-purpose syntax and naturally the more language support it has the better.
+##Language Support
+Gravl is now implemented in **Swift**, **JavaScript**, **Python**, **PHP** and **C#**. I figure this is a pretty good start, but that list will hopefully continue to grow over time. Gravl was designed to be a very general-purpose syntax and naturally the more language support it has the better.
 
-If you'd like to contribute by implementing a Gravl parser in your own favourite language, I'd be happy to include it in the project as well. Gravl is really quite a simple syntax, and writing a parser for it can actually be a fun exercise.
+If you'd like to contribute by implementing a Gravl parser in your own favourite language, I'd be happy to include it in the project as well. Gravl is really quite a simple syntax, and writing a parser for it can actually be a fun exercise. The parser algorithm is pretty much exactly the same from language to language, so you can usually translate it pretty easily to your language of choice by looking at any of the existing implementations.
 
 I also welcome any feedback and suggestions concerning Gravl, and hope that others out there might find it useful!
 
