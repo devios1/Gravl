@@ -130,7 +130,7 @@ public class Gravl {
 			} catch let error as ParserError {
 				self.error = error
 				print("\(error.errorDescription)")
-				return nil
+				document = nil
 			} catch {
 				// this can never happen, but swift complains without it *shrug*
 			}
@@ -313,6 +313,9 @@ public class Gravl {
 		// a glyph is any non-whitespace character
 		// comments are also handled (skipped over) at this level, making them effectively equivalent to whitespace
 		private func peekGlyph() -> Character? {
+			if glyphIndex == buffer.endIndex {
+				return nil
+			}
 			if let glyphIndex = glyphIndex { // if glyphIndex is set, it means we've already located the next glyph
 				return buffer[glyphIndex]
 			}
@@ -323,7 +326,7 @@ public class Gravl {
 			
 			while true {
 				if glyphIndex == buffer.endIndex {
-					glyphIndex = nil
+					//glyphIndex = nil
 					// no glyph found before the eof
 					return nil
 				}
@@ -357,14 +360,14 @@ public class Gravl {
 			return glyph
 		}
 		
-		private func isWhitespace(_ char: Character) -> Bool {
-//			return char == " " || char == "\t" || char == "\n" || char == "\r"
-			return Parser.whitespaceChars.characters.contains(char)
-		}
-		
 		// any of: [ ] = " #
 		private func isReservedChar(_ char: Character) -> Bool {
 			return Parser.reservedChars.characters.contains(char)
+		}
+		
+		private func isWhitespace(_ char: Character) -> Bool {
+//			return char == " " || char == "\t" || char == "\n" || char == "\r"
+			return Parser.whitespaceChars.characters.contains(char)
 		}
 	}
 	

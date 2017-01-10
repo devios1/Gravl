@@ -164,9 +164,11 @@ Doesn't that look nice and clean? Not bad considering we got it all for free.
 Comments in Gravl are indicated with the `#` character. Any text following (and including) a `#` up until the end of the line will be skipped over by the parser. You can put comments anywhere, but they always go to the end of the line. There are no inline comments in Gravl.
 
 	# opening comment
+	
 	[Node				# this is a comment
 		attr=value		# this is another comment
 	]
+	
 	# closing comment
 
 ##Other Languages

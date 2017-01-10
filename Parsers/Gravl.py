@@ -53,7 +53,7 @@ class Parser:
 		except ParserError, e:
 			self.error = e
 			stderr.write("Gravl parse error: " + e.message + " (line %d, col %d)\n" % (e.line, e.col))
-			return None
+			self.document = None
 
 		return self.document
 
@@ -190,6 +190,8 @@ class Parser:
 		return char
 
 	def __peekGlyph(self):
+		if self.__glyphIndex == len(self.__buffer):
+			return None
 		if self.__glyphIndex is not None:
 			return self.__buffer[self.__glyphIndex]
 
@@ -198,7 +200,7 @@ class Parser:
 
 		while True:
 			if self.__glyphIndex == len(self.__buffer):
-				self.__glyphIndex = None
+				#self.__glyphIndex = None
 				return None
 
 			char = self.__buffer[self.__glyphIndex]
@@ -226,11 +228,11 @@ class Parser:
 
 		return glyph
 
-	def __isWhitespace(self, char):
-		return self.__whitespaceChars.find(char) != -1
-
 	def __isReservedChar(self, char):
 		return self.__reservedChars.find(char) != -1
+
+	def __isWhitespace(self, char):
+		return self.__whitespaceChars.find(char) != -1
 
 class ParserError:
 	def __init__(self, parser, message):

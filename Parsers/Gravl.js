@@ -56,7 +56,7 @@ Gravl.Parser = function(name = "Document") {
 			else
 				throw e;
 
-			return null;
+			this.document = null;
 		}
 
 		return this.document;
@@ -122,17 +122,17 @@ Gravl.Parser = function(name = "Document") {
 					throw new ParserError("Attributes must be defined before child nodes.");
 			}
 
-			var node;
+			//var node; // seems kinda odd to do it like this here when we just repeat it above
 
 			if (peekGlyph() == "[") {
-				node = recordNode();
+				childNodes.push(recordNode());
 			} else {
 				value = recordSymbol();
 				console.assert(value != "");
-				node = new Gravl.TextNode(value);
+				childNodes.push(new Gravl.TextNode(value));
 			}
 
-			childNodes.push(node);
+			// childNodes.push(node);
 		}
 
 		return new Gravl.Node(name, attributes, childNodes);
@@ -213,6 +213,8 @@ Gravl.Parser = function(name = "Document") {
 	}
 
 	function peekGlyph() {
+		if (glyphIndex == buffer.length)
+			return null;
 		if (glyphIndex != null)
 			return buffer[glyphIndex];
 
@@ -221,7 +223,7 @@ Gravl.Parser = function(name = "Document") {
 
 		while (true) {
 			if (glyphIndex == buffer.length) {
-				glyphIndex = null;
+				//glyphIndex = null;
 				return null;
 			}
 
@@ -254,16 +256,16 @@ Gravl.Parser = function(name = "Document") {
 		return glyph;
 	}
 
-	function isWhitespace(char) {
-		console.assert(char.length == 1);
-
-		return whitespaceChars.indexOf(char) != -1;
-	}
-
 	function isReservedChar(char) {
 		console.assert(char.length == 1);
 
 		return reservedChars.indexOf(char) != -1;
+	}
+
+	function isWhitespace(char) {
+		console.assert(char.length == 1);
+
+		return whitespaceChars.indexOf(char) != -1;
 	}
 
 	// ParserError
