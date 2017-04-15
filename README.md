@@ -1,6 +1,20 @@
 # Gravl
 A modern structured data language in the spirit of XML and JSON
 
+### Update 1.1
+
+Note: The Gravl spec has been updated to version 1.1. With this update, Gravl becomes even less restrictive and more general-purpose. Version 1.1 is not backwards compatible with 1.0 as it supports a bunch of new language features, however with the exception of comments (which have changed to a more familiar `//` in 1.1), most 1.0 syntax should continue to be parseable under 1.1.
+
+As such, much of the following documentation is out of date. I will update the rest of this readme when I have time. In the meantime, here is a short list of the most significant changes in Gravl 1.1:
+
+- Unnamed and empty nodes are now allowed.
+- Unnamed (default) attributes replace the concept of child nodes.
+- Removed all restrictions on the order of attributes, as unlike XML, order is now considered to have meaning and is preserved.
+- Duplicate attributes are now allowed.
+- You can now use commas to join symbols on either side of the equals as a shorthand to define multiple attributes and/or values at the same time.
+- Escaped characters are now allowed in symbols (not just quoted strings).
+- You can now escape any reserved character, plus n (newline), t (tab) and space.
+
 ## What is Gravl?
 Gravl is a very simple but surprisingly capable structured object representation language. It is designed to be human-enterable and human-readable and avoids many of the limitations of XML and JSON.
 
@@ -24,7 +38,7 @@ Languages like XML and JSON are immensely useful, but they aren't without their 
 ##The Basics
 Gravl uses a square bracket syntax to represent nodes. Like XML (and unlike JSON), nodes in Gravl are named and can recursively contain child nodes. Like JSON (and unlike XML), attributes in Gravl are also fully recursive and can be assigned node values themselves. (Unlike JSON, however, Gravl has no explicit syntax for arrays, but this is mainly because as you'll see, it doesn't need it.)
 
-Gravl uses only 5 reserved characters: `[`, `]`, `"`, `=`, and `#`. Everything else is Unicode, and considered a valid symbol character.
+Gravl uses only 5 reserved characters: `[`, `]`, `"`, `=`, and `,`, plus backslash (`\`) for escaping and double-slash (`//`) for comments. Everything else is Unicode, and considered a valid symbol character.
 
 Gravl also supports a few things that neither XML nor JSON do. For one, unlike XML and JSON, Gravl doesn't require that a document always have exactly one root node. It does this by wrapping all documents in their own implicit document node, which typically takes the name of the file or path the document was loaded from, or "Document" by default.
 
@@ -59,6 +73,9 @@ While not wrapping the above text in quotes is technically still valid (as the s
 Gravl is an extremely permissive language in terms of allowed characters. This was one of the major limitations of XML that initially inspired the creation of Gravl. Unlike XML, Gravl allows you to use *any* character in a symbol that is not a reserved character or whitespace, and if that's not enough for your needs, you can wrap any text (including node names, attribute names, and values) in quotes to use any characters at all, including whitespace and reserved characters.
 
 ###Escaping
+
+> Note: Gravl 1.1 allows any reserved character to be escaped, as well as `n` (newline), `t` (tab), and space.
+
 There are currently only two escaped characters in Gravl: backslash (`\`) and double-quote (`"`). Beyond this, strings are expected to contain the literal character you wish to encode.
 
 Like many languages, characters are escaped with the backslash in Gravl:
@@ -79,6 +96,8 @@ Its structure looks like this:
 Only the name is required, and must be the first thing inside the node, however you can use whatever whitespace you like between the parts of a node, as well as on either side of the `=` sign for attributes.
 
 The name of a node is generally a **symbol**, which is any consecutive sequence of glyphs excluding reserved characters and whitespace, but like any symbol in Gravl, can also be an arbitrary string if wrapped in double-quotes.
+
+> Note: Gravl 1.1 removes the concept of node value for recursive nodes in favor of the more universal approach of unnamed attributes. Under Gravl 1.1, if a child node is not explicitly attributed, it is considered an attribute with an attribute name of `nil`.
 
 The name of the node is actually considered its **value**, and when dealing with text nodes, the literal text of the text node is also considered the node's value. This means that technically speaking, the following are all effectively equivalent in Gravl (although the parser does allow you to differentiate between explicitly bracketed nodes and implicit text nodes):
 
@@ -106,6 +125,8 @@ Unlike XML and JSON, however, attribute values do not need to be wrapped in quot
 
 	[MyNode name=Bob age=48]
 
+> Note: Commas are a new reserved character in Gravl 1.1 and allow you to combine attribute names and/or values to define multiple attributes at the same time. However, you should still not separate full attributes with commas.
+
 **Note:** Be careful to avoid accidentally using commas! The comma is *not* a reserved character in Gravl and is therefore considered a valid symbol character. If you wrote the following, this attribute's value would actually be "Bob,":
 
 	[MyNode name=Bob, age=48]
@@ -129,6 +150,9 @@ The layout and use of whitespace in Gravl is entirely up to you. Gravl ignores a
 However, for readability reasons it is recommended you avoid using quotes for node and attribute names unless necessary.
 
 ###Child Nodes
+
+> Note: Gravl 1.1 does away with the concept of child nodes entirely, in favor of the more universal approach of unattributed nodes. If an attribute name is not explicitly provided, a value is considered to be a default attribute with an attribute name of `nil`. This includes the first unnamed attribute of a node, which was previously considered the node's value. For backwards compatibility, the value of a node in Gravl 1.1 is now considered to be the value of its first attribute, only if it is an unattributed text node.
+
 Like XML, a node in Gravl is fully recursive and can contain an ordered list of child nodes. Everything after the last attribute of a node (or the node's name if it has no attributes) and before the node's closing bracket are considered child nodes of that node.
 
 	[Node attr=value
@@ -138,6 +162,11 @@ Like XML, a node in Gravl is fully recursive and can contain an ordered list of 
 	]
 
 ###Arrays
+
+> Note: Arrays have become even simpler in Gravl 1.1. Because there is no longer any preconceived notion of value, arrays can be represented simply as a collection of default (unattributed) nodes like so:
+> 
+> 	arrayValue = [one two three four]
+
 You may be surprised to learn that Gravl doesn't have an explicit syntax for arrays. The reason for this is that Gravl already implicitly supports arrays in the form of child nodes. For example, if we adopt the convention of using the name "@" to represent an array, we can wrap any ordered list of nodes in an array node like so:
 
 	[Node
@@ -161,18 +190,18 @@ This also means we can take full advantage of all the syntactic shorthands in Gr
 Doesn't that look nice and clean? Not bad considering we got it all for free.
 
 ###Comments
-Comments in Gravl are indicated with the `#` character. Any text following (and including) a `#` up until the end of the line will be skipped over by the parser. You can put comments anywhere, but they always go to the end of the line. There are no inline comments in Gravl.
+Comments in Gravl 1.1 are indicated with `//`. Any text following (and including) two forward-slashes up until the end of the line will be skipped over by the parser. You can put comments anywhere, but they always go to the end of the line. There are no inline comments in Gravl.
 
-	# opening comment
+	// opening comment
 	
-	[Node				# this is a comment
-		attr=value		# this is another comment
+	[Node				// this is a comment
+		attr=value		// this is another comment
 	]
 	
-	# closing comment
+	// closing comment
 
 ##Language Support
-Gravl is now implemented in **Swift**, **JavaScript**, **Python**, **PHP** and **C#**. I figure this is a pretty good start, but that list will hopefully continue to grow over time. Gravl was designed to be a very general-purpose syntax and naturally the more language support it has the better.
+Gravl 1.0 is now implemented in **Swift**, **JavaScript**, **Python**, **PHP** and **C#**. Gravl 1.1 is currently only implemented in Swift. I figure this is a pretty good start, but that list will hopefully continue to grow over time. Gravl was designed to be a very general-purpose syntax and naturally the more language support it has the better.
 
 If you'd like to contribute by implementing a Gravl parser in your own favourite language, I'd be happy to include it in the project as well. Gravl is really quite a simple syntax, and writing a parser for it can actually be a fun exercise. The parser algorithm is pretty much exactly the same from language to language, so you can usually translate it pretty easily to your language of choice by looking at any of the existing implementations.
 

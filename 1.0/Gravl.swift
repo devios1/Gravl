@@ -11,23 +11,24 @@ import Foundation
 public class Gravl {
 
 	public class Node {
-		let value: String // the name of a node is its value
+		let value: String? // the name of a node is its value
 		let attributes: [String: Node]
 		let childNodes: [Node]
 		
 		private static let reservedCharacterSet = CharacterSet(charactersIn: Parser.reservedChars + Parser.whitespaceChars)
 		
-		fileprivate init(value: String, attributes: [String: Node], childNodes: [Node]) {
+		fileprivate init(value: String?, attributes: [String: Node], childNodes: [Node]) {
 			self.value = value
 			self.attributes = attributes
 			self.childNodes = childNodes
 		}
 		
 		public func serialize(options: SerializationOptions = SerializationOptions()) -> String {
+			var namedNode = value != nil
 			var result = ""
-			var quote = Node.quoteForSymbol(value)
+			var quote = Node.quoteForSymbol(value ?? "")
 			let textNode = self is TextNode
-			let escapedValue = value.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
+			let escapedValue = (value ?? "").replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
 			result += "\(textNode ? "" : "[")\(quote)\(escapedValue)\(quote)"
 			var complexAttributes = [String]() // record the keys for attributes that have node values
 			
@@ -93,10 +94,10 @@ public class Gravl {
 	}
 	
 	public class Parser {
-		public static let reservedChars = "[]\"=#"
+		public static let reservedChars = "[]()\"=#"
 		public static let whitespaceChars = " \t\n\r"
 		
-		private let name: String
+		private let name: String?
 		private var buffer: String
 		private var index: String.Index
 		private var glyphIndex: String.Index? = nil // the index of the next glyph, or nil if unknown
@@ -122,10 +123,10 @@ public class Gravl {
 			error = nil
 			
 			do {
-				document = try recordNodeBody(name: name)
+				document = try recordNodeBody(name: nil)
 				
 				if let char = peekGlyph() {
-					throw ParserError(self, fault: .unexpectedChar(char: char, reason: "Extraneous character found in document. Ensure all brackets and quotes are balanced."))
+					throw ParserError(self, fault: .unexpectedChar(char: char, reason: "Ensure all brackets and quotes are balanced."))
 				}
 			} catch let error as ParserError {
 				self.error = error
@@ -140,28 +141,41 @@ public class Gravl {
 		
 		// MARK: Recording States
 		
-		private func recordNode() throws -> Node {
+		private func recordNamedNode() throws -> Node {
 			var char = try readGlyph()
 			assert(char == "[")
 			
 			let name = try recordSymbol()
 			
 			if name == "" {
-				throw ParserError(self, fault: .unexpectedChar(char: try readChar(), reason: "Nodes must be named."));
+				throw ParserError(self, fault: .unexpectedChar(char: try readChar(), reason: "Square nodes must be named."));
 			}
-			
+
 			let node = try recordNodeBody(name: name)
 			
 			char = try readGlyph()
-			assert(char == "]")
-//			if char != "]" { // is this actually possible?
-//				throw ParserError(self, fault: .unexpectedChar(char: char, reason: "Attributes must be defined before child nodes."))
-//			}
+			if char != "]" {
+				throw ParserError(self, fault: .unexpectedChar(char: char, reason: "Expected \"]\"."))
+			}
 			
 			return node
 		}
 		
-		private func recordNodeBody(name: String) throws -> Node {
+		private func recordUnnamedNode() throws -> Node {
+			var char = try readGlyph()
+			assert(char == "(")
+
+			let node = try recordNodeBody(name: nil)
+			
+			char = try readGlyph()
+			if char != ")" {
+				throw ParserError(self, fault: .unexpectedChar(char: char, reason: "Expected \")\"."))
+			}
+			
+			return node
+		}
+		
+		private func recordNodeBody(name: String?) throws -> Node {
 			var attributes = [String: Node]()
 			var childNodes = [Node]()
 			
@@ -177,11 +191,14 @@ public class Gravl {
 					_ = try readGlyph() // absorb the =
 					
 					if attributes[symbol] != nil {
-						throw ParserError(self, fault: .duplicateAttribute(attribute: symbol, node: name))
+						throw ParserError(self, fault: .duplicateAttribute(attribute: symbol))
 					}
 					
 					if peekGlyph() == "[" {
-						let value = try recordNode()
+						let value = try recordNamedNode()
+						attributes[symbol] = value
+					} else if peekGlyph() == "(" {
+						let value = try recordUnnamedNode()
 						attributes[symbol] = value
 					} else {
 						let value = try recordSymbol()
@@ -199,7 +216,7 @@ public class Gravl {
 			}
 			
 			// add remaining nodes as children
-			while peekGlyph() != nil && peekGlyph() != "]" { // we also need to consider eof now
+			while peekGlyph() != nil && peekGlyph() != "]" && peekGlyph() != ")" {
 				if peekGlyph() == "=" {
 					if childNodes.count == 0 {
 						throw ParserError(self, fault: .unexpectedChar(char: try readGlyph(), reason: "Nodes must be named."))
@@ -208,18 +225,16 @@ public class Gravl {
 					}
 				}
 				
-				var node: Node
-				
 				if peekGlyph() == "[" {
-					node = try recordNode()
+					childNodes.append(try recordNamedNode())
+				} else if peekGlyph() == "(" {
+					childNodes.append(try recordUnnamedNode()) 
 				} else {
 					let value = try recordSymbol()
 					assert(value != "")
 					
-					node = TextNode(value: value)
+					childNodes.append(TextNode(value: value))
 				}
-				
-				childNodes.append(node)
 			}
 			
 			return Node(value: name, attributes: attributes, childNodes: childNodes)
@@ -360,13 +375,13 @@ public class Gravl {
 			return glyph
 		}
 		
-		// any of: [ ] = " #
+		// any of: [ ] ( ) = " #
 		private func isReservedChar(_ char: Character) -> Bool {
 			return Parser.reservedChars.characters.contains(char)
 		}
 		
+		// space, tab, line feed, carriage return
 		private func isWhitespace(_ char: Character) -> Bool {
-//			return char == " " || char == "\t" || char == "\n" || char == "\r"
 			return Parser.whitespaceChars.characters.contains(char)
 		}
 	}
@@ -374,7 +389,7 @@ public class Gravl {
 	public struct ParserError: Error {
 		fileprivate enum Fault {
 			case unexpectedChar(char: Character, reason: String)
-			case duplicateAttribute(attribute: String, node: String)
+			case duplicateAttribute(attribute: String)
 			case unexpectedEOF
 		}
 		
@@ -395,8 +410,8 @@ public class Gravl {
 					case .unexpectedChar(let char, let reason):
 						return "Unexpected character: \"\(char)\". \(reason)"
 					
-					case .duplicateAttribute(let attribute, let node):
-						return "Duplicate attribute. The attribute \"\(attribute)\" has already been defined for the node [\(node)]."
+					case .duplicateAttribute(let attribute):
+						return "Duplicate attribute. The attribute \"\(attribute)\" has already been defined for this node."
 					
 					case .unexpectedEOF:
 						return "Unexpected end of file. Ensure all brackets and quotes are balanced."
