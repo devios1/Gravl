@@ -42,24 +42,23 @@ public class Gravl {
 		// i plan to add a serialize option for fast serialization that outputs a minified string
 		public func serialize(options: SerializationOptions = SerializationOptions()) -> String {
 			var result = ""
-//			var maxLength = 0 // track longest attribute name
+			var maxLength = 0 // track longest attribute name
 			
 			if let textNode = self as? TextNode {
 				assert(textNode.value != nil)
-				let quote = Node.symbolNeedsQuotes(textNode.value!) ? "\"" : ""
-				let escapedValue = textNode.value!.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
-				return "\(quote)\(escapedValue)\(quote)"
+				return Node.serializeSymbol(textNode.value!)
 			}
 			
 			var firstAttribute = true
 			var lastExplicit: Bool? = nil
 			
-			// determine longest attribute name
-//			for (attribute, _) in attributes {
-//				if attribute != nil {
-//					maxLength = max(attribute!.characters.count, maxLength)
-//				}
-//			}
+			// determine longest attribute name for padding
+			for (attribute, _) in attributes {
+				if var attribute = attribute {
+					attribute = Node.serializeSymbol(attribute)
+					maxLength = max(attribute.characters.count, maxLength)
+				}
+			}
 			
 			for (attribute, value) in attributes {
 				let explicit = attribute != nil
@@ -68,14 +67,18 @@ public class Gravl {
 					result += options.contentSeparator
 				}
 				
-				if let attribute = attribute {
+				let lines = value.serialize(options: options).components(separatedBy: "\n")
+				
+				if var attribute = attribute {
+					attribute = Node.serializeSymbol(attribute) // could be optimized to avoid doing this twice
 					result += "\n\(options.indentation)"
-					let quote = Node.symbolNeedsQuotes(attribute) ? "\"" : ""
-					result += "\(quote)\(attribute)\(quote)"
+					if lines.count == 1 {
+						result += attribute.padding(toLength: max(maxLength, attribute.characters.count), withPad: " ", startingAt: 0)
+					} else {
+						result += attribute
+					}
 					result += "\(options.beforeEquals)=\(options.afterEquals)"
 				}
-				
-				let lines = value.serialize(options: options).components(separatedBy: "\n")
 				
 				if lines.count == 1 {
 					if !firstAttribute && !explicit {
@@ -105,8 +108,10 @@ public class Gravl {
 			}
 		}
 		
-		private static func symbolNeedsQuotes(_ symbol: String) -> Bool {
-			return symbol.rangeOfCharacter(from: reservedCharacterSet) != nil
+		private static func serializeSymbol(_ symbol: String) -> String {
+			let quote = symbol.rangeOfCharacter(from: reservedCharacterSet) != nil ? "\"" : ""
+			let escaped = symbol.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\n", with: "\\n")
+			return "\(quote)\(escaped)\(quote)"
 		}
 	}
 	
@@ -153,7 +158,7 @@ public class Gravl {
 		public var node: Node?
 		public var error: ParserError?
 		
-		public init(gravl: String = "") {
+		public init(_ gravl: String = "") {
 			self.buffer = gravl
 			self.index = buffer.startIndex // this is pointless but again swift complains without it
 			
@@ -176,7 +181,7 @@ public class Gravl {
 				}
 			} catch let error as ParserError {
 				self.error = error
-				print("\(error.errorDescription)")
+//				print("\(error.errorDescription)")
 				node = nil
 			} catch {
 				// this can never happen, but swift complains without it *shrug*
@@ -209,7 +214,7 @@ public class Gravl {
 		/// Reads a single node, whether a recursive node or text node.
 		private func readNode() throws -> Node? {
 			guard var glyph = peekGlyph() else { // ensures glyphIndex is set or nil if eof
-				return nil//throw ParserError(position: (line: line, col: col), fault: .unexpectedEOF)
+				return nil
 			}
 			
 			if glyph == "[" {
@@ -220,7 +225,10 @@ public class Gravl {
 				node.position = position
 				
 				glyph = try readGlyph()
-				assert(glyph == "]")
+				
+				if glyph != "]" {
+					throw ParserError(position: (line: line, col: col), fault: .unexpectedChar(char: glyph, reason: "Character is not a valid node starting character."))
+				}
 				
 				return node
 			} else {
@@ -286,9 +294,6 @@ public class Gravl {
 		}
 		
 		private func readSymbol() throws -> String {
-//			if peekGlyph() == nil {
-//				throw ParserError(self, fault: .unexpectedEOF)
-//			}
 			if peekGlyph() == "\"" {
 				return try readString()
 			}
@@ -343,7 +348,7 @@ public class Gravl {
 			char = try readChar()
 			switch char {
 				case "\\":
-					return "\\" // should \ be a reserved char? or would it break up symbols?
+					return "\\"
 				
 				case " ":
 					return " ";
@@ -370,7 +375,6 @@ public class Gravl {
 		
 		private func peekChar() -> Character? {
 			if index == buffer.endIndex {
-//				throw ParserError(self, fault: .unexpectedEOF)
 				return nil
 			}
 			
@@ -451,7 +455,7 @@ public class Gravl {
 		}
 		
 		private func glyphPosition() -> (line: Int, col: Int) {
-			var index = self.index // hides self.index
+			var index = self.index
 			var line = self.line
 			var col = self.col
 			
