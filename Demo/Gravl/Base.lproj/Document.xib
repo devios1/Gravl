@@ -4,10 +4,12 @@
         <deployment identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12118"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+        <capability name="system font weights other than Regular or Bold" minToolsVersion="7.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="Document" customModule="Gravl" customModuleProvider="target">
             <connections>
+                <outlet property="fileTypeSelector" destination="k2h-xM-TQo" id="xGh-IO-lTZ"/>
                 <outlet property="inputView" destination="UXA-Rl-jEn" id="6qH-82-Sz0"/>
                 <outlet property="outputView" destination="HGU-aT-FFj" id="Y64-xu-QF1"/>
                 <outlet property="window" destination="xOd-HO-29H" id="JIz-fz-R2o"/>
@@ -19,7 +21,7 @@
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="133" y="235" width="507" height="413"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1057"/>
             <value key="minSize" type="size" width="94" height="86"/>
             <view key="contentView" wantsLayer="YES" id="gIp-Ho-8D9">
                 <rect key="frame" x="0.0" y="0.0" width="507" height="413"/>
@@ -39,11 +41,11 @@
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
                                                 <textView importsGraphics="NO" richText="NO" usesFontPanel="YES" findStyle="panel" allowsUndo="YES" usesRuler="YES" allowsNonContiguousLayout="YES" smartInsertDelete="YES" id="UXA-Rl-jEn">
-                                                    <rect key="frame" x="0.0" y="-0.5" width="505" height="195"/>
+                                                    <rect key="frame" x="0.0" y="-1" width="505" height="195"/>
                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                                     <size key="minSize" width="505" height="195"/>
-                                                    <size key="maxSize" width="505" height="10000000"/>
+                                                    <size key="maxSize" width="507" height="10000000"/>
                                                     <attributedString key="textStorage">
                                                         <fragment content="Type Gravl in here...">
                                                             <attributes>
@@ -85,11 +87,11 @@
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
                                                 <textView importsGraphics="NO" richText="NO" usesFontPanel="YES" findStyle="panel" usesRuler="YES" allowsNonContiguousLayout="YES" id="HGU-aT-FFj">
-                                                    <rect key="frame" x="0.0" y="-0.5" width="505" height="204"/>
+                                                    <rect key="frame" x="0.0" y="-1" width="505" height="204"/>
                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                                     <size key="minSize" width="505" height="204"/>
-                                                    <size key="maxSize" width="505" height="10000000"/>
+                                                    <size key="maxSize" width="507" height="10000000"/>
                                                     <attributedString key="textStorage">
                                                         <fragment content="...and it will appear here parsed and reserialized.">
                                                             <attributes>
@@ -138,11 +140,30 @@
                 <allowedToolbarItems>
                     <toolbarItem implicitItemIdentifier="NSToolbarShowFontsItem" id="3Kr-Cf-T43"/>
                     <toolbarItem implicitItemIdentifier="NSToolbarSpaceItem" id="4da-TB-14l"/>
-                    <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="Wmh-AL-EEK"/>
+                    <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="4Vd-J4-XLh"/>
+                    <toolbarItem implicitItemIdentifier="41786EFE-E2BE-40D1-A20A-16F79ACA3862" label="Language" paletteLabel="Language" id="wIn-W4-JMj">
+                        <nil key="toolTip"/>
+                        <size key="minSize" width="100" height="22"/>
+                        <size key="maxSize" width="170" height="28"/>
+                        <segmentedControl key="view" verticalHuggingPriority="750" id="k2h-xM-TQo">
+                            <rect key="frame" x="0.0" y="14" width="154" height="22"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                            <segmentedCell key="cell" borderStyle="border" alignment="left" style="roundRect" trackingMode="selectOne" id="mm2-gr-d5v">
+                                <font key="font" metaFont="systemMedium" size="11"/>
+                                <segments>
+                                    <segment label="Gravl"/>
+                                    <segment label="JSON" selected="YES" tag="1"/>
+                                    <segment label="XML"/>
+                                </segments>
+                            </segmentedCell>
+                            <connections>
+                                <action selector="languageChanged:" target="-2" id="cLd-nb-DML"/>
+                            </connections>
+                        </segmentedControl>
+                    </toolbarItem>
                 </allowedToolbarItems>
                 <defaultToolbarItems>
                     <toolbarItem reference="3Kr-Cf-T43"/>
-                    <toolbarItem reference="Wmh-AL-EEK"/>
                 </defaultToolbarItems>
             </toolbar>
             <connections>

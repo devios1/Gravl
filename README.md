@@ -34,11 +34,11 @@ Here is what Gravl looks like:
 		]
 	]
 
-###Why?
+### Why?
 
 Languages like XML and JSON are immensely useful, but they aren't without their problems. Gravl aims to solve a few of the biggest problems with these two languages in particular, while keeping its syntax as clean and simple as possible.
 
-##The Basics
+## The Basics
 
 Gravl uses a square bracket syntax to represent nodes. Like XML (and unlike JSON), nodes in Gravl are named and can recursively contain child nodes. Like JSON (and unlike XML), attributes in Gravl are also fully recursive and can be assigned node values themselves. (Unlike JSON, however, Gravl has no explicit syntax for arrays, but this is mainly because as you'll see, it doesn't need it.)
 
@@ -50,7 +50,7 @@ This can be handy as a means to define very simple-structured config files, or t
 
 Here's what an example config file might look like in Gravl:
 
-####userconfig.gravl
+#### userconfig.gravl
 
 	userId=914713
 	lastLogin="2017-01-01 13:59:01"
@@ -77,7 +77,7 @@ While not wrapping the above text in quotes is technically still valid (as the s
 
 Gravl is an extremely permissive language in terms of allowed characters. This was one of the major limitations of XML that initially inspired the creation of Gravl. Unlike XML, Gravl allows you to use *any* character in a symbol that is not a reserved character or whitespace, and if that's not enough for your needs, you can wrap any text (including node names, attribute names, and values) in quotes to use any characters at all, including whitespace and reserved characters.
 
-###Escaping
+### Escaping
 
 > Note: Gravl 1.1 allows any reserved character to be escaped, as well as `n` (newline), `t` (tab), and space.
 
@@ -87,7 +87,7 @@ Like many languages, characters are escaped with the backslash in Gravl:
 
 	[Node attr="Use a \\ to \"escape\" characters in a string."]
 
-##The Structure of a Node
+## The Structure of a Node
 A node in Gravl is started with a `[` and ended with a `]`. It consists of three parts:
 
 1. The node's name (required)
@@ -113,7 +113,7 @@ The name of the node is actually considered its **value**, and when dealing with
 
 In the above example, the first two nodes are `TextNode`s while the last two are regular `Node`s. The rule is simple: if a node is defined with square brackets, it is not considered a text node.
 
-###Attributes
+### Attributes
 
 Attributes have the following structure:
 
@@ -155,7 +155,7 @@ The layout and use of whitespace in Gravl is entirely up to you. Gravl ignores a
 
 However, for readability reasons it is recommended you avoid using quotes for node and attribute names unless necessary.
 
-###Child Nodes
+### Child Nodes
 
 > Note: Gravl 1.1 does away with the concept of child nodes entirely, in favor of the more universal approach of unnamed attributes. If an attribute name is not explicitly provided, a value is considered to be a default attribute with an attribute name of `nil`. For the sake of backwards compatibility, the value of a node in Gravl 1.1 is now considered to be the value of its first attribute, only if it is an unattributed text node.
 
@@ -167,7 +167,7 @@ Like XML, a node in Gravl is fully recursive and can contain an ordered list of 
 		]
 	]
 
-###Arrays
+### Arrays
 
 > Note: Arrays have become even simpler in Gravl 1.1. Because there is no longer any preconceived notion of value, arrays can be represented simply as a collection of default (unattributed) nodes like so:
 > 
@@ -195,7 +195,7 @@ This also means we can take full advantage of all the syntactic shorthands in Gr
 
 Doesn't that look nice and clean? Not bad considering we got it all for free.
 
-###Comments
+### Comments
 
 Comments in Gravl 1.1 are now indicated with `//`. The main motivation for moving away from the hash sign (`#`) is that the hash symbol is a useful character for representing other things (like hex codes for example) and I didn't want to prevent its use in a symbol. Any text following (and including) two forward-slashes up until the end of the line will be skipped over by the parser. You can put comments anywhere, but they always go to the end of the line. There are no inline or multiline comments in Gravl.
 
@@ -205,7 +205,7 @@ Comments in Gravl 1.1 are now indicated with `//`. The main motivation for movin
 	]
 	// closing comment
 
-##Language Support
+## Language Support
 
 Gravl 1.0 is now implemented in **Swift**, **JavaScript**, **Python**, **PHP** and **C#**. Gravl 1.1 is presently only implemented in Swift. This list will hopefully continue to grow over time. Gravl was designed to be a very general-purpose syntax and naturally the more language support it has the better.
 

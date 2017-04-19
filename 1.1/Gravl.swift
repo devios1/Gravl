@@ -14,8 +14,6 @@ public class Gravl {
 		let attributes: [(name: String?, value: Node)]
 		var position: (line: Int, col: Int)
 		
-		private static let reservedCharacterSet = CharacterSet(charactersIn: Parser.reservedChars + Parser.whitespaceChars + "\\")
-		
 		public var value: String? {
 			get {
 				if let first = attributes.first {
@@ -24,6 +22,24 @@ public class Gravl {
 					}
 				}
 				return nil
+			}
+		}
+		
+		/// Returns the node's unattributed nodes in an array.
+		public var values: [Node] {
+			get {
+				return values();
+			}
+		}
+		
+		/// Returns all of this node's values flattened into an array of `String`s.
+		public var flatValues: [String] {
+			get {
+				var values: [String] = []
+				for value in self.values() {
+					values += value.flatValues
+				}
+				return values
 			}
 		}
 		
@@ -38,25 +54,37 @@ public class Gravl {
 			self.position = (-1, -1)
 		}
 		
+		public func values(forAttribute attribute: String? = nil) -> [Node] {
+			var values: [Node] = []
+			for (name, value) in attributes {
+				if name == attribute {
+					values.append(value)
+				}
+			}
+			return values
+		}
+	
 		// note: this function currently sacrifices some efficiency for readability of output
 		// i plan to add a serialize option for fast serialization that outputs a minified string
 		public func serialize(options: SerializationOptions = SerializationOptions()) -> String {
 			var result = ""
-			var maxLength = 0 // track longest attribute name
+			var maxLength = 0 // tracks longest attribute name
 			
-			if let textNode = self as? TextNode {
-				assert(textNode.value != nil)
-				return Node.serializeSymbol(textNode.value!)
+			if let valueNode = self as? ValueNode {
+				assert(valueNode.value != nil)
+				return Parser.serializeSymbol(valueNode.value!)
 			}
 			
 			var firstAttribute = true
 			var lastExplicit: Bool? = nil
 			
-			// determine longest attribute name for padding
-			for (attribute, _) in attributes {
-				if var attribute = attribute {
-					attribute = Node.serializeSymbol(attribute)
-					maxLength = max(attribute.characters.count, maxLength)
+			if options.alignValues {
+				// determine longest attribute name for padding
+				for (attribute, _) in attributes {
+					if var attribute = attribute {
+						attribute = Parser.serializeSymbol(attribute)
+						maxLength = max(attribute.characters.count, maxLength)
+					}
 				}
 			}
 			
@@ -70,9 +98,9 @@ public class Gravl {
 				let lines = value.serialize(options: options).components(separatedBy: "\n")
 				
 				if var attribute = attribute {
-					attribute = Node.serializeSymbol(attribute) // could be optimized to avoid doing this twice
+					attribute = Parser.serializeSymbol(attribute) // could be optimized to avoid doing this twice
 					result += "\n\(options.indentation)"
-					if lines.count == 1 {
+					if options.alignValues && lines.count == 1 {
 						result += attribute.padding(toLength: max(maxLength, attribute.characters.count), withPad: " ", startingAt: 0)
 					} else {
 						result += attribute
@@ -107,17 +135,10 @@ public class Gravl {
 				return "[\(trimmed)]"
 			}
 		}
-		
-		private static func serializeSymbol(_ symbol: String) -> String {
-			let quote = symbol.rangeOfCharacter(from: reservedCharacterSet) != nil ? "\"" : ""
-			let escaped = symbol.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\n", with: "\\n")
-			return "\(quote)\(escaped)\(quote)"
-		}
 	}
 	
-	// aka primitive node, leaf node, value node
 	// not really a true subclass as it can't have attributes or child nodes of its own
-	public class TextNode: Node {
+	public class ValueNode: Node {
 		private var _value: String?
 		
 		fileprivate init(value: String) {
@@ -130,46 +151,54 @@ public class Gravl {
 				return _value
 			}
 		}
+		
+		public override var flatValues: [String] {
+			get {
+				if let value = _value {
+					return [value]
+				} else {
+					return []
+				}
+			}
+		}
 	}
 	
 	public struct SerializationOptions {
 		public var indentation      = "  "
-		public var newline          = "\n"
 		public var beforeEquals     = " "
 		public var afterEquals      = " "
 		public var contentSeparator = "\n" // separates default (unnamed) attributes from named attributes
+		public var alignValues      = true // aligns all attributed values per node
 	}
 	
 	public class Parser {
+		public static var logErrors = false // turn on to print parse errors to the console
+		
 		public static let reservedChars = "[]\"=,"
 		public static let whitespaceChars = " \t\n\r"
 		
-		private var buffer: String {
-			didSet {
-				parse()
-			}
-		}
+		private static let reservedCharacterSet = CharacterSet(charactersIn: Parser.reservedChars + Parser.whitespaceChars + "\\")
 		
+		private var buffer: String
 		private var index: String.Index
-		private var glyphIndex: String.Index? = nil // the index of the next glyph, or nil if unknown
-		fileprivate var line = 1
-		fileprivate var col = 0
+		private var glyphIndex: String.Index? // the index of the next glyph, or nil if unknown
+		private var position: (line: Int, col: Int) = (1, 0)
 		
 		public var node: Node?
 		public var error: ParserError?
 		
-		public init(_ gravl: String = "") {
-			self.buffer = gravl
-			self.index = buffer.startIndex // this is pointless but again swift complains without it
-			
-			parse()
+		public init() {
+			self.buffer = ""
+			self.index = buffer.startIndex
 		}
 
-		private func parse() {
+		public func parse(_ gravl: String) {
+			self.buffer = gravl
+			
 			index = buffer.startIndex
 			glyphIndex = nil
-			line = 1
-			col = 0
+			position.line = 1
+			position.col = 0
 			node = nil
 			error = nil
 			
@@ -177,18 +206,21 @@ public class Gravl {
 				node = try readNodeBody()
 				
 				if let char = peekGlyph() {
-					throw ParserError(position: (line: line, col: col), fault: .unexpectedChar(char: char, reason: "Extraneous character found in document. Ensure all brackets and quotes are balanced."))
+					_ = try readGlyph()
+					throw ParserError(position: position, fault: .unexpectedChar(char: char, reason: "Extraneous character found in document. Ensure all brackets and quotes are balanced."))
 				}
 			} catch let error as ParserError {
 				self.error = error
-//				print("\(error.errorDescription)")
+				if Parser.logErrors {
+					print("\(error.errorDescription)")
+				}
 				node = nil
 			} catch {
-				// this can never happen, but swift complains without it *shrug*
+				// this can never happen, but swift complains without it
 			}
 		}
 		
-		// MARK: Read Functions
+		// MARK: Read Methods
 		
 		/// Reads consecutive nodes joined by a comma (`,`).
 		private func readNodes() throws -> [Node] {
@@ -220,26 +252,27 @@ public class Gravl {
 			if glyph == "[" {
 				_ = try readGlyph() // absorb [
 				
-				let position = glyphPosition()
+				let nodePosition = glyphPosition()
 				let node = try readNodeBody()
-				node.position = position
+				node.position = nodePosition
 				
 				glyph = try readGlyph()
 				
 				if glyph != "]" {
-					throw ParserError(position: (line: line, col: col), fault: .unexpectedChar(char: glyph, reason: "Character is not a valid node starting character."))
+					throw ParserError(position: position, fault: .unexpectedChar(char: glyph, reason: "Character is not a valid node starting character."))
 				}
 				
 				return node
 			} else {
+				let isString = peekGlyph() == "\"" // this allows for empty strings
 				let position = glyphPosition()
 				let symbol = try readSymbol()
 				
-				if symbol.isEmpty {
+				if symbol.isEmpty && !isString {
 					return nil
 				}
 				
-				let node = TextNode(value: symbol)
+				let node = ValueNode(value: symbol)
 				node.position = position
 				
 				return node
@@ -263,18 +296,14 @@ public class Gravl {
 					_ = try readGlyph() // absorb =
 					
 					for name in nodes {
-						if !(name is TextNode) {
-							throw ParserError(position: name.position, fault: .illegalAttribute)
-						} else {
-							assert(name.value != nil) // could a TextNode ever be nil?
-							names.append(name.value)
-						}
+						names += name.flatValues as [String?]
 					}
 					
 					nodes = try readNodes()
 					
 					if nodes.isEmpty {
-						throw ParserError(position: (line: line, col: col), fault: .illegalValue)
+						let glyph = try readGlyph()
+						throw ParserError(position: position, fault: .unexpectedChar(char: glyph, reason: "Character is not a valid node starting character."))
 					}
 				}
 				
@@ -310,7 +339,7 @@ public class Gravl {
 					if char == "\\" {
 						symbol.append(try readEscapedChar())
 						continue
-					} else if !isReservedChar(peekChar()!) && !isWhitespace(peekChar()!) {
+					} else if !Parser.isReservedChar(peekChar()!) && !Parser.isWhitespace(peekChar()!) {
 						symbol.append(try readChar())
 						continue
 					}
@@ -368,7 +397,7 @@ public class Gravl {
 				return char
 			}
 			
-			throw ParserError(position: (line: line, col: col), fault: .unexpectedChar(char: char, reason: "A backslash must be followed by a reserved character, \"n\", \"t\" or a space."))
+			throw ParserError(position: position, fault: .unexpectedChar(char: char, reason: "A backslash must be followed by a reserved character, \"n\", \"t\" or a space."))
 		}
 		
 		// MARK: Helper Methods
@@ -387,14 +416,14 @@ public class Gravl {
 			}
 
 			guard let char = peekChar() else {
-				throw ParserError(position: (line: line, col: col), fault: .unexpectedEOF)
+				throw ParserError(position: position, fault: .unexpectedEOF)
 			}
 			
 			if char == "\n" {
-				line += 1
-				col = 0
+				position.line += 1
+				position.col = 0
 			} else {
-				col += 1
+				position.col += 1
 			}
 			
 			index = buffer.index(after: index) // swift 3, everyone *sigh*
@@ -432,7 +461,7 @@ public class Gravl {
 					insideComment = false
 				}
 				
-				if !insideComment && !isWhitespace(buffer[glyphIndex!]) {
+				if !insideComment && !Parser.isWhitespace(buffer[glyphIndex!]) {
 					break
 				}
 				
@@ -444,7 +473,7 @@ public class Gravl {
 		
 		private func readGlyph() throws -> Character {
 			guard let glyph = peekGlyph() else { // ensures glyphIndex is set or nil if eof
-				throw ParserError(position: (line: line, col: col), fault: .unexpectedEOF)
+				throw ParserError(position: position, fault: .unexpectedEOF)
 			}
 			
 			while glyphIndex != nil {
@@ -456,8 +485,8 @@ public class Gravl {
 		
 		private func glyphPosition() -> (line: Int, col: Int) {
 			var index = self.index
-			var line = self.line
-			var col = self.col
+			var line = position.line
+			var col = position.col
 			
 			_ = peekGlyph() // make sure glyphIndex is set
 			
@@ -477,21 +506,27 @@ public class Gravl {
 			return (line: line, col: col)
 		}
 		
+		// MARK: Static Methods
+		
 		// any of: [ ] = " ,
-		private func isReservedChar(_ char: Character) -> Bool {
+		private static func isReservedChar(_ char: Character) -> Bool {
 			return Parser.reservedChars.characters.contains(char)
 		}
 		
-		private func isWhitespace(_ char: Character) -> Bool {
+		private static func isWhitespace(_ char: Character) -> Bool {
 			return Parser.whitespaceChars.characters.contains(char)
+		}
+		
+		public static func serializeSymbol(_ symbol: String) -> String {
+			let quote = symbol.rangeOfCharacter(from: reservedCharacterSet) != nil || symbol.isEmpty ? "\"" : ""
+			let escaped = symbol.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\n", with: "\\n")
+			return "\(quote)\(escaped)\(quote)"
 		}
 	}
 	
 	public struct ParserError: Error {
 		fileprivate enum Fault {
 			case unexpectedChar(char: Character, reason: String)
-			case illegalAttribute
-			case illegalValue
 			case unexpectedEOF
 		}
 		
@@ -511,12 +546,6 @@ public class Gravl {
 				switch fault {
 					case .unexpectedChar(let char, let reason):
 						return "Unexpected character: \"\(char)\". \(reason)"
-					
-					case .illegalAttribute:
-						return "Illegal attribute. Attribute names must be strings."
-					
-					case .illegalValue:
-						return "Missing attribute value."
 					
 					case .unexpectedEOF:
 						return "Unexpected end of file. Ensure all brackets and quotes are balanced."

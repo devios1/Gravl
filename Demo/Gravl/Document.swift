@@ -13,6 +13,7 @@ class Document: NSDocument, NSTextViewDelegate {
 	@IBOutlet var inputView: NSTextView!
 	@IBOutlet var outputView: NSTextView!
 	
+	var parser: Gravl.Parser = Gravl.Parser()
 	var tempStorage: String? = nil
 	
 	override init() {
@@ -20,8 +21,8 @@ class Document: NSDocument, NSTextViewDelegate {
 	}
 	
 	override func awakeFromNib() {
-		inputView.font = NSFont(name: "FiraCode-Retina", size: 16)
-		outputView.font = NSFont(name: "FiraCode-Retina", size: 13)
+		inputView.font = NSFont(name: "FiraCode-Retina", size: 14)
+		outputView.font = NSFont(name: "FiraCode-Retina", size: 12)
 		
 		inputView.delegate = self
 		
@@ -34,6 +35,10 @@ class Document: NSDocument, NSTextViewDelegate {
 		}
 	}
 
+	@IBAction func languageChanged(_ sender: NSSegmentedControl) {
+		parseText()
+	}
+	
 	override class func autosavesInPlace() -> Bool {
 		return true
 	}
@@ -61,23 +66,33 @@ class Document: NSDocument, NSTextViewDelegate {
 	}
 	
 	private func parseText() {
-		if let text = inputView?.string {
-			let parser = Gravl.Parser(text)
-			if let root = parser.node {
-				outputView.string = root.description
-				outputView.textColor = NSColor.black
+		guard let text = inputView?.string else {
+			return
+		}
+		
+		let t1 = Date()
+		parser.parse(text)
+		let t2 = Date()
+		Swift.print("Parse time:      \((t2.timeIntervalSince(t1) * 1000 * 100).rounded() / 100) ms")
+		
+		if let root = parser.node {
+			outputView.string = root.description
+			outputView.textColor = NSColor.black
+			
+			let t3 = Date()
+			Swift.print("Serialize time:  \((t3.timeIntervalSince(t2) * 1000 * 100).rounded() / 100) ms")
 
-				// uncomment to enable reparse compare verification
-//				let reparser = Gravl.Parser(root.description)
-//				if reparser.node?.attributes[0].value.description == root.description {
-//					Swift.print("Reparse compare successful!")
-//				} else {
-//					Swift.print("Reparse compare failed. :(\n\(reparser.node?.description ?? "Parse failed.")")
-//				}
-			} else {
-				outputView.string = "\(parser.error!.errorDescription)"
-				outputView.textColor = NSColor.red
-			}
+			// uncomment to enable reparse compare verification
+//			let reparser = Gravl.Parser()
+//			reparser.parse(root.description)
+//			if reparser.node?.attributes[0].value.description == root.description {
+//				Swift.print("Reparse compare successful!")
+//			} else {
+//				Swift.print("Reparse compare failed. :(\n\(reparser.node?.description ?? "Parse failed.")")
+//			}
+		} else {
+			outputView.string = "\(parser.error!.errorDescription)"
+			outputView.textColor = NSColor.red
 		}
 	}
 }
