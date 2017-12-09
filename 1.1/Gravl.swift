@@ -9,10 +9,20 @@
 import Foundation
 
 public class Gravl {
-
+	
 	public class Node: CustomStringConvertible {
+		public struct Metadata {
+			/// The position (line number and column) of the initial character that defines the current node in its original source.
+			///
+			/// Note that these numbers, per convention, start at 1, unlike the other indices in this structure which start at 0.
+			var position: (line: Int, col: Int) = (-1, -1)
+			var localIndex: Int = -1 // these track the index of each attribute; we may want to also count each atomic node
+			var attributeIndex: Int = -1
+			// do we want a global attribute index too?
+		}
+		
+		var metadata = Metadata()
 		let attributes: [(name: String?, value: Node)]
-		var position: (line: Int, col: Int)
 		
 		public var value: String? {
 			get {
@@ -25,14 +35,14 @@ public class Gravl {
 			}
 		}
 		
-		/// Returns the node's unattributed nodes in an array.
+		/// Returns just the node's unattributed nodes in an array.
 		public var values: [Node] {
 			get {
 				return values();
 			}
 		}
 		
-		/// Returns all of this node's values flattened into an array of `String`s.
+		/// Returns the node's `values` flattened into an array of `String`s.
 		public var flatValues: [String] {
 			get {
 				var values: [String] = []
@@ -49,9 +59,9 @@ public class Gravl {
 			}
 		}
 		
-		fileprivate init(attributes: [(String?, Node)]) {
+		internal init(attributes: [(String?, Node)]) {
 			self.attributes = attributes
-			self.position = (-1, -1)
+//			self.metadata = Metadata()//(-1, -1)
 		}
 		
 		public func values(forAttribute attribute: String? = nil) -> [Node] {
@@ -83,7 +93,7 @@ public class Gravl {
 				for (attribute, _) in attributes {
 					if var attribute = attribute {
 						attribute = Parser.serializeSymbol(attribute)
-						maxLength = max(attribute.characters.count, maxLength)
+						maxLength = max(attribute.count, maxLength)
 					}
 				}
 			}
@@ -101,7 +111,7 @@ public class Gravl {
 					attribute = Parser.serializeSymbol(attribute) // could be optimized to avoid doing this twice
 					result += "\n\(options.indentation)"
 					if options.alignValues && lines.count == 1 {
-						result += attribute.padding(toLength: max(maxLength, attribute.characters.count), withPad: " ", startingAt: 0)
+						result += attribute.padding(toLength: max(maxLength, attribute.count), withPad: " ", startingAt: 0)
 					} else {
 						result += attribute
 					}
@@ -141,7 +151,7 @@ public class Gravl {
 	public class ValueNode: Node {
 		private var _value: String?
 		
-		fileprivate init(value: String) {
+		internal init(value: String) {
 			super.init(attributes: [])
 			_value = value
 		}
@@ -169,6 +179,9 @@ public class Gravl {
 		public var afterEquals      = " "
 		public var contentSeparator = "\n" // separates default (unnamed) attributes from named attributes
 		public var alignValues      = true // aligns all attributed values per node
+		
+		public init() {
+		}
 	}
 	
 	public class Parser {
@@ -183,6 +196,8 @@ public class Gravl {
 		private var index: String.Index
 		private var glyphIndex: String.Index? // the index of the next glyph, or nil if unknown
 		private var position: (line: Int, col: Int) = (1, 0)
+		private var localIndex = -1
+		private var attributeIndex = -1
 		
 		public var node: Node?
 		public var error: ParserError?
@@ -192,7 +207,7 @@ public class Gravl {
 			self.index = buffer.startIndex
 		}
 
-		public func parse(_ gravl: String) {
+		public func parse(_ gravl: String) -> Node? {
 			self.buffer = gravl
 			
 			index = buffer.startIndex
@@ -218,6 +233,8 @@ public class Gravl {
 			} catch {
 				// this can never happen, but swift complains without it
 			}
+			
+			return node
 		}
 		
 		// MARK: Read Methods
@@ -226,8 +243,11 @@ public class Gravl {
 		private func readNodes() throws -> [Node] {
 			var nodes = [Node]()
 			
+//			attributeIndex += 1
+			
 			while true {
 				if let node = try readNode() {
+//					node.metadata.attributeIndex = attributeIndex
 					nodes.append(node)
 				} else {
 					break
@@ -252,9 +272,11 @@ public class Gravl {
 			if glyph == "[" {
 				_ = try readGlyph() // absorb [
 				
-				let nodePosition = glyphPosition()
+				let position = glyphPosition()
+				
 				let node = try readNodeBody()
-				node.position = nodePosition
+				
+				node.metadata.position = position
 				
 				glyph = try readGlyph()
 				
@@ -262,10 +284,15 @@ public class Gravl {
 					throw ParserError(position: position, fault: .unexpectedChar(char: glyph, reason: "Character is not a valid node starting character."))
 				}
 				
+//				localIndex = -1
+//				attributeIndex = -1
+				
 				return node
+				
 			} else {
+			
 				let isString = peekGlyph() == "\"" // this allows for empty strings
-				let position = glyphPosition()
+				let position = glyphPosition() // either the first character or the "
 				let symbol = try readSymbol()
 				
 				if symbol.isEmpty && !isString {
@@ -273,13 +300,20 @@ public class Gravl {
 				}
 				
 				let node = ValueNode(value: symbol)
-				node.position = position
+				
+				node.metadata.position = position
+				
+//				localIndex = -1
+//				attributeIndex = -1
 				
 				return node
 			}
 		}
 		
 		private func readNodeBody() throws -> Node {
+			localIndex = -1
+			attributeIndex = -1
+			
 			var attributes = [(String?, Node)]()
 			
 			while true {
@@ -313,7 +347,14 @@ public class Gravl {
 				
 				// cross-join attributes on values
 				for name in names {
+					attributeIndex += 1
+					
 					for value in nodes {
+						localIndex += 1
+						
+						value.metadata.localIndex = localIndex
+						value.metadata.attributeIndex = attributeIndex
+						
 						attributes.append((name, value))
 					}
 				}
@@ -393,7 +434,7 @@ public class Gravl {
 			}
 			
 			// allow any reserved character to be escaped in a symbol
-			if Parser.reservedChars.characters.contains(char) {
+			if Parser.reservedChars.contains(char) {
 				return char
 			}
 			
@@ -510,11 +551,11 @@ public class Gravl {
 		
 		// any of: [ ] = " ,
 		private static func isReservedChar(_ char: Character) -> Bool {
-			return Parser.reservedChars.characters.contains(char)
+			return Parser.reservedChars.contains(char)
 		}
 		
 		private static func isWhitespace(_ char: Character) -> Bool {
-			return Parser.whitespaceChars.characters.contains(char)
+			return Parser.whitespaceChars.contains(char)
 		}
 		
 		public static func serializeSymbol(_ symbol: String) -> String {
