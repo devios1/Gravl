@@ -18,7 +18,6 @@ public class Gravl {
 			var position: (line: Int, col: Int) = (-1, -1)
 			var localIndex: Int = -1 // these track the index of each attribute; we may want to also count each atomic node
 			var attributeIndex: Int = -1
-			// do we want a global attribute index too?
 		}
 		
 		var metadata = Metadata()
@@ -61,7 +60,6 @@ public class Gravl {
 		
 		internal init(attributes: [(String?, Node)]) {
 			self.attributes = attributes
-//			self.metadata = Metadata()//(-1, -1)
 		}
 		
 		public func values(forAttribute attribute: String? = nil) -> [Node] {
@@ -73,16 +71,14 @@ public class Gravl {
 			}
 			return values
 		}
-	
-		// note: this function currently sacrifices some efficiency for readability of output
-		// i plan to add a serialize option for fast serialization that outputs a minified string
+		
 		public func serialize(options: SerializationOptions = SerializationOptions()) -> String {
 			var result = ""
-			var maxLength = 0 // tracks longest attribute name
+			var maxLength = 0 // tracks longest attribute name (if alignValues is enabled)
 			
 			if let valueNode = self as? ValueNode {
 				assert(valueNode.value != nil)
-				return Parser.serializeSymbol(valueNode.value!)
+				return Parser.serializeSymbol(valueNode.value!, options: options)
 			}
 			
 			var firstAttribute = true
@@ -92,7 +88,7 @@ public class Gravl {
 				// determine longest attribute name for padding
 				for (attribute, _) in attributes {
 					if var attribute = attribute {
-						attribute = Parser.serializeSymbol(attribute)
+						attribute = Parser.serializeSymbol(attribute, options: options)
 						maxLength = max(attribute.count, maxLength)
 					}
 				}
@@ -101,6 +97,26 @@ public class Gravl {
 			for (attribute, value) in attributes {
 				let explicit = attribute != nil
 				
+				if options is MinimalSerializationOptions {
+					var row: String
+					var firstCharacter: Character
+					let serializedValue = value.serialize(options: options)
+					if explicit {
+						let escapedAttribute = Parser.serializeSymbol(attribute!, options: options)
+						firstCharacter = escapedAttribute.first!
+						row = "\(options.attributeColor)\(escapedAttribute)\(options.equalsColor)=\(options.valueColor)\(serializedValue)"
+					} else {
+						firstCharacter = serializedValue.first!
+						row = "\(options.defaultValueColor)\(serializedValue)"
+					}
+					if !firstAttribute && !Parser.reservedChars.contains(result.last!) && !Parser.reservedChars.contains(firstCharacter) {
+						result += "\(options.whitespaceColor) "
+					}
+					result += row
+					firstAttribute = false
+					continue
+				}
+				
 				if lastExplicit != nil && explicit != lastExplicit {
 					result += options.contentSeparator
 				}
@@ -108,27 +124,34 @@ public class Gravl {
 				let lines = value.serialize(options: options).components(separatedBy: "\n")
 				
 				if var attribute = attribute {
-					attribute = Parser.serializeSymbol(attribute) // could be optimized to avoid doing this twice
+					attribute = Parser.serializeSymbol(attribute, options: options) // could be optimized to avoid doing this twice
 					result += "\n\(options.indentation)"
+					result += options.attributeColor
+					
 					if options.alignValues && lines.count == 1 {
 						result += attribute.padding(toLength: max(maxLength, attribute.count), withPad: " ", startingAt: 0)
 					} else {
 						result += attribute
 					}
-					result += "\(options.beforeEquals)=\(options.afterEquals)"
+					result += "\(options.whitespaceColor)\(options.beforeEquals)\(options.equalsColor)=\(options.whitespaceColor)\(options.afterEquals)"
 				}
 				
 				if lines.count == 1 {
 					if !firstAttribute && !explicit {
-						result += "\n\(options.indentation)"
+						result += "\(options.whitespaceColor)\n\(options.indentation)"
+					} else if firstAttribute && !explicit {
+						result += options.defaultValueColor
+					} else {
+						result += options.valueColor
 					}
 					result += lines.first!.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+					result += options.whitespaceColor
 				} else {
 					for line in lines {
 						if explicit {
-							result += "\n\(options.indentation)\(options.indentation)\(line)"
+							result += "\(options.whitespaceColor)\n\(options.indentation)\(options.indentation)\(line)"
 						} else {
-							result += "\n\(options.indentation)\(line)"
+							result += "\(options.whitespaceColor)\n\(options.indentation)\(line)"
 						}
 					}
 				}
@@ -137,12 +160,16 @@ public class Gravl {
 				firstAttribute = false
 			}
 			
+			if options is MinimalSerializationOptions {
+				return "\(options.bracketColor)[\(result)\(options.bracketColor)]"
+			}
+			
 			let trimmed = result.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
 			let multiLine = trimmed.contains("\n")
 			if multiLine {
-				return "[\(result)\n]"
+				return "\(options.bracketColor)[\(result)\n\(options.bracketColor)]"
 			} else {
-				return "[\(trimmed)]"
+				return "\(options.bracketColor)[\(trimmed)\(options.bracketColor)]"
 			}
 		}
 	}
@@ -173,14 +200,39 @@ public class Gravl {
 		}
 	}
 	
-	public struct SerializationOptions {
-		public var indentation      = "  "
-		public var beforeEquals     = " "
-		public var afterEquals      = " "
-		public var contentSeparator = "\n" // separates default (unnamed) attributes from named attributes
-		public var alignValues      = true // aligns all attributed values per node
+	public class SerializationOptions {
+		var indentation      = "  "
+		var beforeEquals     = " "
+		var afterEquals      = " "
+		var contentSeparator = "\n" // separates default (unnamed) attributes from named attributes
+		var alignValues      = true // aligns all attributed values per node
+		
+		// support for colorization using color codes
+		var whitespaceColor			= ""
+		var bracketColor				= ""
+		var attributeColor			= ""
+		var equalsColor					= ""
+		var stringColor					= ""
+		var valueColor					= ""
+		var defaultValueColor		= ""
 		
 		public init() {
+		}
+	}
+	
+	/// This serialization scheme results in the smallest serialized string without altering the meaning of the document.
+	///
+	/// It also provides the fastest serialization option by shortcutting some of the logic used in normal serialization.
+	///
+	/// **Note:** Instances of this scheme do support colorization, however doing so obviously does not result in the minimum string size.
+	public class MinimalSerializationOptions: SerializationOptions {
+		override public init() {
+			super.init()
+			indentation = ""
+			beforeEquals = ""
+			afterEquals = ""
+			contentSeparator = ""
+			alignValues = false
 		}
 	}
 	
@@ -558,10 +610,11 @@ public class Gravl {
 			return Parser.whitespaceChars.contains(char)
 		}
 		
-		public static func serializeSymbol(_ symbol: String) -> String {
-			let quote = symbol.rangeOfCharacter(from: reservedCharacterSet) != nil || symbol.isEmpty ? "\"" : ""
+		public static func serializeSymbol(_ symbol: String, options: SerializationOptions) -> String {
+			let needsQuote = symbol.rangeOfCharacter(from: reservedCharacterSet) != nil || symbol.isEmpty
+			let quote = needsQuote ? "\"" : ""
 			let escaped = symbol.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\n", with: "\\n")
-			return "\(quote)\(escaped)\(quote)"
+			return "\(needsQuote ? options.stringColor : "")\(quote)\(escaped)\(quote)"
 		}
 	}
 	

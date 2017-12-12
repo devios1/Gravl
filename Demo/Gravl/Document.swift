@@ -12,6 +12,7 @@ class Document: NSDocument, NSTextViewDelegate {
 
 	@IBOutlet var inputView: NSTextView!
 	@IBOutlet var outputView: NSTextView!
+	@IBOutlet weak var languageSelector: NSSegmentedControl!
 	
 	var parser: Gravl.Parser = Gravl.Parser()
 	var tempStorage: String? = nil
@@ -21,6 +22,7 @@ class Document: NSDocument, NSTextViewDelegate {
 	}
 	
 	override func awakeFromNib() {
+		languageSelector.selectedSegment = 0
 		inputView.font = NSFont(name: "FiraCode-Retina", size: 14)
 		outputView.font = NSFont(name: "FiraCode-Retina", size: 12)
 		

@@ -12,7 +12,7 @@
 		450406641E046B4200DB9E12 /* Document.xib in Resources */ = {isa = PBXBuildFile; fileRef = 450406621E046B4200DB9E12 /* Document.xib */; };
 		450406661E046B4200DB9E12 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 450406651E046B4200DB9E12 /* Assets.xcassets */; };
 		450406691E046B4200DB9E12 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 450406671E046B4200DB9E12 /* MainMenu.xib */; };
-		45422EB41EA3D62D00DFB59B /* Gravl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45422EB31EA3D62D00DFB59B /* Gravl.swift */; };
+		458DD2191FE0800400CC0A72 /* Gravl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 458DD2181FE0800400CC0A72 /* Gravl.swift */; };
 		4596A00C1E09F8F100BB15B0 /* FiraCode-Bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 4596A0071E09F8F100BB15B0 /* FiraCode-Bold.otf */; };
 		4596A00D1E09F8F100BB15B0 /* FiraCode-Light.otf in Resources */ = {isa = PBXBuildFile; fileRef = 4596A0081E09F8F100BB15B0 /* FiraCode-Light.otf */; };
 		4596A00E1E09F8F100BB15B0 /* FiraCode-Medium.otf in Resources */ = {isa = PBXBuildFile; fileRef = 4596A0091E09F8F100BB15B0 /* FiraCode-Medium.otf */; };
@@ -28,7 +28,7 @@
 		450406651E046B4200DB9E12 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		450406681E046B4200DB9E12 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		4504066A1E046B4200DB9E12 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		45422EB31EA3D62D00DFB59B /* Gravl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Gravl.swift; sourceTree = "<group>"; };
+		458DD2181FE0800400CC0A72 /* Gravl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Gravl.swift; path = ../Sources/1.1/Gravl.swift; sourceTree = "<group>"; };
 		4596A0071E09F8F100BB15B0 /* FiraCode-Bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "FiraCode-Bold.otf"; sourceTree = "<group>"; };
 		4596A0081E09F8F100BB15B0 /* FiraCode-Light.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "FiraCode-Light.otf"; sourceTree = "<group>"; };
 		4596A0091E09F8F100BB15B0 /* FiraCode-Medium.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "FiraCode-Medium.otf"; sourceTree = "<group>"; };
@@ -50,7 +50,7 @@
 		450406521E046B4200DB9E12 = {
 			isa = PBXGroup;
 			children = (
-				45422EB21EA3D62D00DFB59B /* Gravl */,
+				458DD2181FE0800400CC0A72 /* Gravl.swift */,
 				4504065D1E046B4200DB9E12 /* Demo */,
 				4504065C1E046B4200DB9E12 /* Products */,
 			);
@@ -76,15 +76,6 @@
 			);
 			name = Demo;
 			path = Gravl;
-			sourceTree = "<group>";
-		};
-		45422EB21EA3D62D00DFB59B /* Gravl */ = {
-			isa = PBXGroup;
-			children = (
-				45422EB31EA3D62D00DFB59B /* Gravl.swift */,
-			);
-			name = Gravl;
-			path = ../1.1;
 			sourceTree = "<group>";
 		};
 		4596A0051E09F8F100BB15B0 /* Resources */ = {
@@ -195,7 +186,7 @@
 			files = (
 				450406611E046B4200DB9E12 /* Document.swift in Sources */,
 				4504065F1E046B4200DB9E12 /* AppDelegate.swift in Sources */,
-				45422EB41EA3D62D00DFB59B /* Gravl.swift in Sources */,
+				458DD2191FE0800400CC0A72 /* Gravl.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

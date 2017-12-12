@@ -9,8 +9,8 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="Document" customModule="Gravl" customModuleProvider="target">
             <connections>
-                <outlet property="fileTypeSelector" destination="k2h-xM-TQo" id="xGh-IO-lTZ"/>
                 <outlet property="inputView" destination="UXA-Rl-jEn" id="6qH-82-Sz0"/>
+                <outlet property="languageSelector" destination="k2h-xM-TQo" id="QSE-su-vcK"/>
                 <outlet property="outputView" destination="HGU-aT-FFj" id="Y64-xu-QF1"/>
                 <outlet property="window" destination="xOd-HO-29H" id="JIz-fz-R2o"/>
             </connections>
@@ -164,6 +164,9 @@
                 </allowedToolbarItems>
                 <defaultToolbarItems>
                     <toolbarItem reference="3Kr-Cf-T43"/>
+                    <toolbarItem reference="4Vd-J4-XLh"/>
+                    <toolbarItem reference="wIn-W4-JMj"/>
+                    <toolbarItem reference="4Vd-J4-XLh"/>
                 </defaultToolbarItems>
             </toolbar>
             <connections>
