@@ -21,10 +21,12 @@ public class Gravl {
 			var attributeIndex: Int = -1
 		}
 		
+		/// Represents the attributes (child nodes) of the current node.
+		public var attributes: [(name: String?, value: Node)]
 		/// Contains metadata about the current node such as its position in the source file.
 		public var metadata = Metadata()
-		public var attributes: [(name: String?, value: Node)]
 		
+		/// Returns the `String` value of the current node.
 		public var value: String? {
 			get {
 				if let first = attributes.first {
@@ -64,7 +66,7 @@ public class Gravl {
 			self.attributes = attributes
 		}
 		
-		public func values(forAttribute attribute: String? = nil) -> [Node] {
+		public func values(for attribute: String? = nil) -> [Node] {
 			var values: [Node] = []
 			for (name, value) in attributes {
 				if name == attribute {
@@ -99,7 +101,7 @@ public class Gravl {
 			for (attribute, value) in attributes {
 				let explicit = attribute != nil
 				
-				if options is MinimalSerializationOptions {
+				if options is MinifiedSerialization {
 					var row: String
 					var firstCharacter: Character
 					let serializedValue = value.serialize(options: options)
@@ -126,7 +128,7 @@ public class Gravl {
 				let lines = value.serialize(options: options).components(separatedBy: "\n")
 				
 				if var attribute = attribute {
-					attribute = Parser.serializeSymbol(attribute, options: options) // could be optimized to avoid doing this twice
+					attribute = Parser.serializeSymbol(attribute, options: options)
 					result += "\n\(options.indentation)"
 					result += options.attributeColor
 					
@@ -162,7 +164,7 @@ public class Gravl {
 				firstAttribute = false
 			}
 			
-			if options is MinimalSerializationOptions {
+			if options is MinifiedSerialization {
 				return "\(options.bracketColor)[\(result)\(options.bracketColor)]"
 			}
 			
@@ -176,7 +178,6 @@ public class Gravl {
 		}
 	}
 	
-	// not really a true subclass as it can't have attributes or child nodes of its own
 	public class ValueNode: Node {
 		private var _value: String?
 		
@@ -227,7 +228,7 @@ public class Gravl {
 	/// It also provides the fastest serialization option by shortcutting some of the logic used in normal serialization.
 	///
 	/// **Note:** Instances of this scheme do support colorization, however doing so obviously does not result in the minimum string size.
-	public class MinimalSerializationOptions: SerializationOptions {
+	public class MinifiedSerialization: SerializationOptions {
 		override public init() {
 			super.init()
 			indentation = ""
@@ -286,7 +287,7 @@ public class Gravl {
 				}
 				node = nil
 			} catch {
-				// this can never happen, but swift complains without it
+				// this can never happen, but Swift complains without it
 			}
 			
 			return node
@@ -298,11 +299,8 @@ public class Gravl {
 		private func readNodes() throws -> [Node] {
 			var nodes = [Node]()
 			
-//			attributeIndex += 1
-			
 			while true {
 				if let node = try readNode() {
-//					node.metadata.attributeIndex = attributeIndex
 					nodes.append(node)
 				} else {
 					break
@@ -339,9 +337,6 @@ public class Gravl {
 					throw ParserError(position: position, fault: .unexpectedChar(char: glyph, reason: "Character is not a valid node starting character."))
 				}
 				
-//				localIndex = -1
-//				attributeIndex = -1
-				
 				return node
 				
 			} else {
@@ -357,9 +352,6 @@ public class Gravl {
 				let node = ValueNode(value: symbol)
 				
 				node.metadata.position = position
-				
-//				localIndex = -1
-//				attributeIndex = -1
 				
 				return node
 			}
@@ -604,7 +596,6 @@ public class Gravl {
 		
 		// MARK: Static Methods
 		
-		// any of: [ ] = " ,
 		private static func isReservedChar(_ char: Character) -> Bool {
 			return Parser.reservedChars.contains(char)
 		}
