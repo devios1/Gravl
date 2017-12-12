@@ -5,6 +5,9 @@ import PackageDescription
 
 let package = Package(
 	name: "Gravl",
+	products: [
+		.library(name: "Gravl", targets: ["Gravl"]),
+	],
 	dependencies: [
 	],
 	targets: [
