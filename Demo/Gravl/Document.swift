@@ -29,7 +29,7 @@ class Document: NSDocument, NSTextViewDelegate {
 		inputView.delegate = self
 		
 		if tempStorage != nil {
-			inputView.string = tempStorage
+			inputView.string = tempStorage!
 			tempStorage = nil
 			parseText()
 		} else {
@@ -41,23 +41,23 @@ class Document: NSDocument, NSTextViewDelegate {
 		parseText()
 	}
 	
-	override class func autosavesInPlace() -> Bool {
+	override class var autosavesInPlace: Bool {
 		return true
 	}
 
-	override var windowNibName: String? {
-		return "Document"
+	override var windowNibName: NSNib.Name? {
+		return NSNib.Name("Document")
 	}
 
 	override func data(ofType typeName: String) throws -> Data {
-		return inputView.string?.data(using: String.Encoding.utf8) ?? Data()
+		return inputView.string.data(using: String.Encoding.utf8) ?? Data()
 	}
 
 	override func read(from data: Data, ofType typeName: String) throws {
 		tempStorage = String(data: data, encoding: String.Encoding.utf8)
 		
 		if inputView?.string != nil {
-			inputView.string = tempStorage
+			inputView.string = tempStorage!
 			tempStorage = nil
 			parseText()
 		}

@@ -9,19 +9,21 @@
 import Foundation
 
 public class Gravl {
-	
 	public class Node: CustomStringConvertible {
 		public struct Metadata {
 			/// The position (line number and column) of the initial character that defines the current node in its original source.
 			///
 			/// Note that these numbers, per convention, start at 1, unlike the other indices in this structure which start at 0.
 			var position: (line: Int, col: Int) = (-1, -1)
-			var localIndex: Int = -1 // these track the index of each attribute; we may want to also count each atomic node
+			/// Represents the index of the current node in its parent node.
+			var localIndex: Int = -1
+			/// Represents the index of the attribute that this value is assigned to. Two sibling nodes may share the same `attributeIndex` but have different `localIndex`es, for example if multiple values are joined with `,`.
 			var attributeIndex: Int = -1
 		}
 		
-		var metadata = Metadata()
-		let attributes: [(name: String?, value: Node)]
+		/// Contains metadata about the current node such as its position in the source file.
+		public var metadata = Metadata()
+		public var attributes: [(name: String?, value: Node)]
 		
 		public var value: String? {
 			get {
@@ -258,7 +260,8 @@ public class Gravl {
 			self.buffer = ""
 			self.index = buffer.startIndex
 		}
-
+		
+		@discardableResult
 		public func parse(_ gravl: String) -> Node? {
 			self.buffer = gravl
 			
