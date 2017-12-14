@@ -203,20 +203,20 @@ public class ValueNode: Node {
 }
 
 public class SerializationOptions {
-	public var indentation      = "  "
-	public var beforeEquals     = " "
-	public var afterEquals      = " "
-	public var contentSeparator = "\n" // separates default (unnamed) attributes from named attributes
-	public var alignValues      = true // aligns all attributed values per node
+	public var indentation        = "  "
+	public var beforeEquals       = " "
+	public var afterEquals        = " "
+	public var contentSeparator   = "\n" // separates default (unnamed) attributes from named attributes
+	public var alignValues        = true // aligns all attributed values per node
 	
 	// support for colorization using color codes
-	public var whitespaceColor			= ""
-	public var bracketColor				= ""
-	public var attributeColor			= ""
-	public var equalsColor					= ""
-	public var stringColor					= ""
-	public var valueColor					= ""
-	public var defaultValueColor		= ""
+	public var whitespaceColor    = ""
+	public var bracketColor       = ""
+	public var attributeColor     = ""
+	public var equalsColor        = ""
+	public var stringColor        = ""
+	public var valueColor         = ""
+	public var defaultValueColor  = ""
 	
 	public init() {
 	}
