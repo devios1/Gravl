@@ -203,20 +203,20 @@ public class ValueNode: Node {
 }
 
 public class SerializationOptions {
-	var indentation      = "  "
-	var beforeEquals     = " "
-	var afterEquals      = " "
-	var contentSeparator = "\n" // separates default (unnamed) attributes from named attributes
-	var alignValues      = true // aligns all attributed values per node
+	public var indentation      = "  "
+	public var beforeEquals     = " "
+	public var afterEquals      = " "
+	public var contentSeparator = "\n" // separates default (unnamed) attributes from named attributes
+	public var alignValues      = true // aligns all attributed values per node
 	
 	// support for colorization using color codes
-	var whitespaceColor			= ""
-	var bracketColor				= ""
-	var attributeColor			= ""
-	var equalsColor					= ""
-	var stringColor					= ""
-	var valueColor					= ""
-	var defaultValueColor		= ""
+	public var whitespaceColor			= ""
+	public var bracketColor				= ""
+	public var attributeColor			= ""
+	public var equalsColor					= ""
+	public var stringColor					= ""
+	public var valueColor					= ""
+	public var defaultValueColor		= ""
 	
 	public init() {
 	}
@@ -225,8 +225,6 @@ public class SerializationOptions {
 /// This serialization scheme results in the smallest serialized string without altering the meaning of the document.
 ///
 /// It also provides the fastest serialization option by shortcutting some of the logic used in normal serialization.
-///
-/// **Note:** Instances of this scheme do support colorization, however doing so obviously does not result in the minimum string size.
 public class MinifiedSerialization: SerializationOptions {
 	override public init() {
 		super.init()
