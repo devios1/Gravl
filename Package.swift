@@ -5,13 +5,17 @@ import PackageDescription
 let package = Package(
 	name: "Gravl",
 	products: [
-		.library(name: "Gravl", targets: ["Gravl"]),
+		.library(
+			name: "Gravl",
+			targets: ["Gravl"]
+		),
 	],
 	dependencies: [
 	],
 	targets: [
 		.target(
 			name: "Gravl",
-			path: "Sources/1.1"),
+			path: "Sources/1.1"
+		),
 	]
 )
