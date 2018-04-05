@@ -18,44 +18,44 @@ The six reserved characters are:
 
 A `[` begins a **node**, and a `]` ends it. A **node** has the following structure:
 
-> `[`
-> &nbsp;&nbsp;&nbsp;&nbsp;**attribute** `=` **value**
-> &nbsp;&nbsp;&nbsp;&nbsp;…
-> `]`
+`[`<br />
+&nbsp;&nbsp;&nbsp;&nbsp;**attribute** `=` **value**<br />
+&nbsp;&nbsp;&nbsp;&nbsp;…<br />
+`]`
 
 An **attribute** must be a **symbol**. A **value** can be a **symbol** or another **node**.
 
 A child without an attribute is called an **unattributed value** (or **value node** for short):
 
-> `[`
-> &nbsp;&nbsp;&nbsp;&nbsp;**value**
+> `[`<br />
+> &nbsp;&nbsp;&nbsp;&nbsp;**value**<br />
 > `]`
 
 A **symbol** on its own (not paired with an `=`) is always assumed to be a **value** with an empty (`nil`) **attribute**.
 
 A `,` can be used to combine **attributes**, **values**, or both:
 
-> `[`
-> &nbsp;&nbsp;&nbsp;&nbsp;**attribute** `=` **value1** `,` **value2**
+> `[`<br />
+> &nbsp;&nbsp;&nbsp;&nbsp;**attribute** `=` **value1** `,` **value2**<br />
 > `]`
 
 is equivalent to:
 
-> `[`
-> &nbsp;&nbsp;&nbsp;&nbsp;**attribute** `=` **value1**
+> `[`<br />
+> &nbsp;&nbsp;&nbsp;&nbsp;**attribute** `=` **value1**<br />
 > &nbsp;&nbsp;&nbsp;&nbsp;**attribute** `=` **value2**
 > `]`
 
 while:
 
-> `[`
-> &nbsp;&nbsp;&nbsp;&nbsp;**attribute1** `,` **attribute2** `=` **value**
+> `[`<br />
+> &nbsp;&nbsp;&nbsp;&nbsp;**attribute1** `,` **attribute2** `=` **value**<br />
 > `]`
 
 is equivalent to:
 
-> `[`
-> &nbsp;&nbsp;&nbsp;&nbsp;**attribute1** `=` **value**
+> `[`<br />
+> &nbsp;&nbsp;&nbsp;&nbsp;**attribute1** `=` **value**<br />
 > &nbsp;&nbsp;&nbsp;&nbsp;**attribute2** `=` **value**
 > `]`
 
