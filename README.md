@@ -18,65 +18,50 @@ The six reserved characters are:
 
 A `[` begins a **node**, and a `]` ends it. A **node** has the following structure:
 
-`[`
-
-&nbsp;&nbsp;&nbsp;&nbsp;**attribute** `=` **value**
-
-&nbsp;&nbsp;&nbsp;&nbsp;…
-
-`]`
+> `[`
+> &nbsp;&nbsp;&nbsp;&nbsp;**attribute** `=` **value**
+> &nbsp;&nbsp;&nbsp;&nbsp;…
+> `]`
 
 An **attribute** must be a **symbol**. A **value** can be a **symbol** or another **node**.
 
 A child without an attribute is called an **unattributed value** (or **value node** for short):
 
-`[`
+> `[`
+> &nbsp;&nbsp;&nbsp;&nbsp;**value**
+> `]`
 
-&nbsp;&nbsp;&nbsp;&nbsp;**value**
-
-`]`
-
-> A **symbol** on its own (not paired with an `=`) is always assumed to be a **value** with an empty (`nil`) **attribute**.
+A **symbol** on its own (not paired with an `=`) is always assumed to be a **value** with an empty (`nil`) **attribute**.
 
 A `,` can be used to combine **attributes**, **values**, or both:
 
-`[`
-
-&nbsp;&nbsp;&nbsp;&nbsp;**attribute** `=` **value1** `,` **value2**
-
-`]`
+> `[`
+> &nbsp;&nbsp;&nbsp;&nbsp;**attribute** `=` **value1** `,` **value2**
+> `]`
 
 is equivalent to:
 
-`[`
-
-&nbsp;&nbsp;&nbsp;&nbsp;**attribute** `=` **value1**
-
-&nbsp;&nbsp;&nbsp;&nbsp;**attribute** `=` **value2**
-
-`]`
+> `[`
+> &nbsp;&nbsp;&nbsp;&nbsp;**attribute** `=` **value1**
+> &nbsp;&nbsp;&nbsp;&nbsp;**attribute** `=` **value2**
+> `]`
 
 while:
 
-`[`
-
-&nbsp;&nbsp;&nbsp;&nbsp;**attribute1** `,` **attribute2** `=` **value**
-
-`]`
+> `[`
+> &nbsp;&nbsp;&nbsp;&nbsp;**attribute1** `,` **attribute2** `=` **value**
+> `]`
 
 is equivalent to:
 
-`[`
-
-&nbsp;&nbsp;&nbsp;&nbsp;**attribute1** `=` **value**
-
-&nbsp;&nbsp;&nbsp;&nbsp;**attribute2** `=` **value**
-
-`]`
+> `[`
+> &nbsp;&nbsp;&nbsp;&nbsp;**attribute1** `=` **value**
+> &nbsp;&nbsp;&nbsp;&nbsp;**attribute2** `=` **value**
+> `]`
 
 This also applies to **value nodes**, but in standard Gravl this is redundant, as:
 
-`[` **value1** `,` **value2** `]` **=** `[` **value1**&nbsp;&nbsp;**value2** `]`
+> `[` **value1** `,` **value2** `]` **=** `[` **value1**&nbsp;&nbsp;**value2** `]`
 
 *Note that because of this, I will often represent arrays of values with commas to make them more visually apparent. Just bear in mind the comma is not strictly needed:* `[a, b, c]` **=** `[a b c]`
 
@@ -84,19 +69,15 @@ A `\` can be used to **escape** any character that would otherwise have an unint
 
 A **symbol** may also be wrapped with `"` to turn it into a **string**. The only characters you need to escape inside a string are `\` and `"`.
 
-`[`
-
-&nbsp;&nbsp;&nbsp;&nbsp;**attribute** `=` `"`**string**`"`
-
-`]`
+> `[`
+> &nbsp;&nbsp;&nbsp;&nbsp;**attribute** `=` `"`**string**`"`
+> `]`
 
 A `//` indicates a **comment**. Any text following a `//` until the end of the line is ignored. Slashes may also be **escaped** to avoid unintentional comments.
 
-`[`
-
-&nbsp;&nbsp;&nbsp;&nbsp;`//` **comment**
-
-`]`
+> `[`
+> &nbsp;&nbsp;&nbsp;&nbsp;`//` **comment**
+> `]`
 
 > **Note:** Because Gravl has such a terse syntax, it lends itself well to a helpful mathematical notation that I will use throughout this book. It's worth pointing out that these expressions involve real Gravl and are used as demonstrations and occasionally proofs.
 >
