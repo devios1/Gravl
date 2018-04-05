@@ -10,7 +10,7 @@
 
 The atom of Gravl is the **node**, and it is simply an ordered collection of other nodes (called its **children**), or a **symbol**.
 
-A **symbol** is any string of consecutive characters not including any (unescaped) reserved characters or whitespace.
+A **symbol** is any string of consecutive characters not including (unescaped) reserved characters or whitespace.
 
 The six reserved characters are:
 
@@ -25,7 +25,7 @@ A `[` begins a **node**, and a `]` ends it. A **node** has the following structu
 
 An **attribute** must be a **symbol**. A **value** can be a **symbol** or another **node**.
 
-A child without an attribute is called an **unattributed value** (or **value node** for short):
+A **value** can be placed on its own without specifying an attribute. Such a value is called an **unattributed value** (or **value node** for short):
 
 `[`<br />
 &nbsp;&nbsp;&nbsp;&nbsp;**value**<br />
@@ -43,7 +43,7 @@ is equivalent to:
 
 `[`<br />
 &nbsp;&nbsp;&nbsp;&nbsp;**attribute** `=` **value1**<br />
-&nbsp;&nbsp;&nbsp;&nbsp;**attribute** `=` **value2**
+&nbsp;&nbsp;&nbsp;&nbsp;**attribute** `=` **value2**<br />
 `]`
 
 while:
@@ -56,14 +56,14 @@ is equivalent to:
 
 `[`<br />
 &nbsp;&nbsp;&nbsp;&nbsp;**attribute1** `=` **value**<br />
-&nbsp;&nbsp;&nbsp;&nbsp;**attribute2** `=` **value**
+&nbsp;&nbsp;&nbsp;&nbsp;**attribute2** `=` **value**<br />
 `]`
 
 This also applies to **value nodes**, but in standard Gravl this is redundant, as:
 
 `[` **value1** `,` **value2** `]` **=** `[` **value1**&nbsp;&nbsp;**value2** `]`
 
-*Note that because of this, I will often represent arrays of values with commas to make them more visually apparent. Just bear in mind the comma is not strictly needed:* `[a, b, c]` **=** `[a b c]`
+*Note that because of this, I will often represent arrays of values with commas to make them more visually apparent. Just bear in mind the comma is optional in these cases.
 
 A `\` can be used to **escape** any character that would otherwise have an unintended meaning (such as a reserved character or whitespace) and turn it into a valid **symbol** character.
 
@@ -86,7 +86,7 @@ A `//` indicates a **comment**. Any text following a `//` until the end of the l
 Some important points to keep in mind. We take these as **axioms**:
 
 - The **order** of a node's children matters:<br />
-`a` **≠** `b` **⟺** `[a b]` **≠** `[b a]`
+`a` **≠** `b` **⟹** `[a b]` **≠** `[b a]`
 
 - The attributes of sibling children are **not** necessarily **unique**:<br />
 `[a=1 a=2]` is valid.
