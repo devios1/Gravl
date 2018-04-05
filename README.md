@@ -85,10 +85,10 @@ A `//` indicates a **comment**. Any text following a `//` until the end of the l
 
 Some important points to keep in mind. We take these as **axioms**:
 
-- The **order** of a node's children matters:
+- The **order** of a node's children matters:<br />
 `a` **≠** `b` **⟺** `[a b]` **≠** `[b a]`
 
-- The attributes of sibling children are **not** necessarily **unique**:
+- The attributes of sibling children are **not** necessarily **unique**:<br />
 `[a=1 a=2]` is valid.
 
 *Work in progress.*
